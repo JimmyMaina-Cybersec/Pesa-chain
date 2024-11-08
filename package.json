@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint -c eslint.config.cjs ."
+    "lint": "./lint.sh"
   },
   "keywords": [],
   "author": "",
