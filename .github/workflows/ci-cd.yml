@@ -1,0 +1,112 @@
+name: CI/CD for Pesa-chain
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/*
+      - release/*
+      - hotfix/*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14, 16]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+  deploy-to-development:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: development
+      url: https://dev.moneyremittance.example.com
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Deploy to Development
+      run: |
+        echo "Deploying to development..."
+        # Add deployment script here
+
+  deploy-to-staging:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/release/*'
+    environment:
+      name: staging
+      url: https://staging.moneyremittance.example.com
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying to staging..."
+        # Add deployment script here
+
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://www.moneyremittance.example.com
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Deploy to Production
+      run: |
+        echo "Deploying to production..."
+        # Add deployment script here
+
+  deploy-to-hotfix:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/hotfix/*'
+    environment:
+      name: production
+      url: https://www.moneyremittance.example.com
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Deploy Hotfix to Production
+      run: |
+        echo "Deploying hotfix to production..."
+        # Add deployment script here
