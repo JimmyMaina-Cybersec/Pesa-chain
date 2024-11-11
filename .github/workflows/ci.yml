@@ -8,6 +8,15 @@ on:
       - feature/*
       - release/*
       - hotfix/*
+  pull_request:
+    branches:
+      - main
+      - develop
+      - feature/*
+      - release/*
+      - hotfix/*
+  schedule:
+    - cron: '35 12 * * *'
 
 jobs:
   build:
@@ -31,7 +40,15 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Run Semgrep Scan 
-        run: | 
-          pip install semgrep 
-          semgrep --config=p/ci .
+  semgrep:
+    runs-on: ubuntu-20.04
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+    container:
+      image: semgrep/semgrep
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Semgrep Scan
+        run: semgrep ci
