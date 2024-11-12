@@ -3,7 +3,7 @@ name: CD Pipeline for Pesa-chain
 on:
   push:
     branches:
-      - main
+      - master
       - develop
       - release/*
       - hotfix/*
@@ -51,7 +51,7 @@ jobs:
 
   deploy-to-production:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     environment:
       name: production
       url: https://www.moneyremittance.example.com

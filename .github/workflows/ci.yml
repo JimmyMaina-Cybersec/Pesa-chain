@@ -3,14 +3,14 @@ name: CI Pipeline for Pesa-chain
 on:
   push:
     branches:
-      - main
+      - master
       - develop
       - feature/*
       - release/*
       - hotfix/*
   pull_request:
     branches:
-      - main
+      - master
       - develop
       - feature/*
       - release/*
