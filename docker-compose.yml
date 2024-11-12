@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./Backend:/app
+    depends_on:
+      - blockchain
+
+  blockchain:
+    build:
+      context: ./Blockchain/Chaincode
+      dockerfile: Dockerfile
+    ports:
+      - "9999:9999"
+    environment:
+      - FABRIC_CFG_PATH=/chaincode/config
+    volumes:
+      - ./Blockchain/Chaincode:/chaincode
+
+  web:
+    build:
+      context: ./Frontend/Web
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  # Add any additional services or configurations as needed
