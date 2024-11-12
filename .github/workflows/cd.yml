@@ -5,13 +5,14 @@ on:
     branches:
       - master
       - develop
+      - maintenance
       - release/*
       - hotfix/*
 
 jobs:
   deploy-to-development:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/maintenance'
     environment:
       name: development
       url: https://dev.moneyremittance.example.com
