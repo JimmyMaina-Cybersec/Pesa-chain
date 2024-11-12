@@ -2,21 +2,7 @@ name: CI Pipeline for Pesa-chain
 
 on:
   push:
-    branches:
-      - master
-      - develop
-      - maintenance
-      - feature/*
-      - release/*
-      - hotfix/*
   pull_request:
-    branches:
-      - master
-      - develop
-      - maintenance
-      - feature/*
-      - release/*
-      - hotfix/*
   schedule:
     - cron: '35 12 * * *'
 
