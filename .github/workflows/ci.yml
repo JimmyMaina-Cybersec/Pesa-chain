@@ -52,7 +52,11 @@ jobs:
 
   build-scan-push-backend-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -102,7 +106,10 @@ jobs:
 
   build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -154,7 +161,10 @@ jobs:
 
   build-scan-push-web-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -206,7 +216,10 @@ jobs:
 
   build-scan-push-mobile-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
