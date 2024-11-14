@@ -32,5 +32,9 @@ WORKDIR /chaincode
 # Copy the compiled binary from the builder stage
 COPY --from=builder /chaincode/chaincode /chaincode/chaincode
 
+# Health check to ensure the chaincode is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD [ "pgrep", "chaincode" ] || exit 1
+
 # Command to run the chaincode
 CMD ["./chaincode"]

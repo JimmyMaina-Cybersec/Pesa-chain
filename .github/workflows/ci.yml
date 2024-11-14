@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
     strategy:
       matrix:
         node-version: [22]
@@ -49,17 +50,15 @@ jobs:
       - name: Run Semgrep Scan
         run: semgrep ci
 
-  build-scan-backend-image-development:
+  build-scan-push-backend-image:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -67,21 +66,51 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Select Tagging scheme
+        id: get_tag
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 -t myapp-dev:${{ github.sha }} --push .
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
 
-  build-scan-backend-image-production:
+      - name: Set env Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Backend Docker Image
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production backend
+          else
+            docker-compose -f docker-compose.yml build backend
+          fi
+          docker-compose -f docker-compose.yml push backend
+
+  build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -89,21 +118,51 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Production Docker Image
+      - name: Select Tagging scheme
+        id: get_tag
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 -t myapp-prod:${{ github.sha }} --push .
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
 
-  build-scan-blockchain-image-development:
+      - name: Set env Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Blockchain Docker Image
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production blockchain
+          else
+            docker-compose -f docker-compose.yml build blockchain
+          fi
+          docker-compose -f docker-compose.yml push blockchain
+
+  build-scan-push-web-image:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -111,35 +170,51 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Build and Push Development Blockchain Docker Image
-        if: github.ref == 'refs/heads/develop'
+      - name: Select Tagging scheme
+        id: get_tag
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENV=development -t fabricNetwork-dev:${{ github.sha }} --push .
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build and Push Development Blockchain Docker Image
-        if: github.ref == 'refs/heads/master'
+      - name: Set env Based on Branch
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENV=production -t fabricNetwork-prod:${{ github.sha }} --push .
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-  build-scan-blockchain-image-production:
+      - name: Build and Push Frontend Docker Image (Web)
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production frontend-web
+          else
+            docker-compose -f docker-compose.yml build frontend-web
+          fi
+          docker-compose -f docker-compose.yml push frontend-web
+
+  build-scan-push-mobile-image:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/heads/feature/') && !startsWith(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -147,14 +222,36 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Build and Push Production Blockchain Docker Image
+      - name: Select Tagging scheme
+        id: get_tag
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 -t myblockchain-prod:${{ github.sha }} --push .
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set env Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Frontend Docker Image (Mobile)
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production frontend-mobile
+          else
+            docker-compose -f docker-compose.yml build frontend-mobile
+          fi
+          docker-compose -f docker-compose.yml push frontend-mobile

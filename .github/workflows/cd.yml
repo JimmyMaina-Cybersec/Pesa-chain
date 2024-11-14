@@ -10,6 +10,7 @@ on:
       - hotfix/*
 
 jobs:
+  # Development Deployment
   deploy-to-development:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
@@ -20,33 +21,129 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Pull Development Docker Image
-        run: docker pull myapp-dev:${{ github.sha }}
-
-      - name: Run Development Docker Container
+      - name: Select Tagging Scheme
+        id: get_tag
         run: |
-          docker run -d --name myapp-dev -p 3000:3000 myapp-dev:${{ github.sha }}
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_ENV
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_ENV
+          fi
 
+      - name: Set IMAGE_TAG for Development
+        run: |
+          echo "IMAGE_TAG=dev-${{ env.git_tag }}" >> $GITHUB_ENV
+
+
+      # Parallel deployment of Docker images for development
+      - name: Deploy Pesachain (Dev)
+        run: |
+          docker compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml up -d
+
+      # Wait for services to start
+      - name: Wait for Services to Start
+        run: sleep 60
+
+      # Health Checks
+      - name: Health Check for Blockchain Service
+        run: |
+          if ! curl --fail http://localhost:4000/health; then
+            echo "Blockchain service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Backend Service
+        run: |
+          if ! curl --fail http://localhost:3000/health; then
+            echo "Backend service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Web Service
+        run: |
+          if ! curl --fail http://localhost:8080; then
+            echo "Web service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Mobile Service
+        run: |
+          if ! curl --fail http://localhost:8081; then
+            echo "Mobile service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+  # Staging Deployment
   deploy-to-staging:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/release/*'
-    environment:
-      name: staging
-      url: https://staging.moneyremittance.example.com
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          node-version: '22'
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Deploy to Staging
+      - name: Select Tagging Scheme
+        id: get_tag
         run: |
-          echo "Deploying to staging..."
-          # Add deployment script here
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_ENV
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_ENV
+          fi
 
+      - name: Set IMAGE_TAG for Staging
+        run: |
+            echo "IMAGE_TAG=stag-${{ env.git_tag }}" >> $GITHUB_ENV
+
+      # Parallel deployment of Docker images for development
+      - name: Deploy Pesachain (Stag)
+        run: |
+          docker compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml up -d
+
+      # Wait for services to start
+      - name: Wait for Services to Start
+        run: sleep 60
+
+      # Health Checks
+      - name: Health Check for Backend Service
+        run: |
+          if ! curl --fail http://localhost:3000/health; then
+            echo "Backend service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Blockchain Service
+        run: |
+          if ! curl --fail http://localhost:4000/health; then
+            echo "Blockchain service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Web Service
+        run: |
+          if ! curl --fail http://localhost:8080; then
+            echo "Web service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Mobile Service
+        run: |
+          if ! curl --fail http://localhost:8081; then
+            echo "Mobile service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+  # Production Deployment
   deploy-to-production:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
@@ -57,63 +154,57 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Pull Production Docker Image
-        run: docker pull myapp-prod:${{ github.sha }}
-
-      - name: Run Production Docker Container
+      - name: Select Tagging Scheme
+        id: get_tag
         run: |
-          docker run -d --name myapp-prod -p 80:3000 myapp-prod:${{ github.sha }}
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=${GITHUB_SHA}" >> $GITHUB_ENV
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_ENV
+          fi
 
-  deploy-blockchain-development:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
-    steps:
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Pull Development Blockchain Docker Image
-        run: docker pull myblockchain-dev:${{ github.sha }}
-
-      - name: Run Development Blockchain Docker Container
+      - name: Set IMAGE_TAG for Production
         run: |
-          docker run -d --name myblockchain-dev -p 4000:4000 myblockchain-dev:${{ github.sha }}
+            echo "IMAGE_TAG=dev-${{ env.git_tag }}" >> $GITHUB_ENV
 
-  deploy-blockchain-production:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    steps:
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Pull Production Blockchain Docker Image
-        run: docker pull myblockchain-prod:${{ github.sha }}
-
-      - name: Run Production Blockchain Docker Container
+      # Parallel deployment of Docker images for development
+      - name: Deploy Pesachain (Prod)
         run: |
-          docker run -d --name myblockchain-prod -p 4000:4000 myblockchain-prod:${{ github.sha }}
+          docker compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml up -d
 
-  deploy-to-hotfix:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/hotfix/*'
-    environment:
-      name: production
-      url: https://www.moneyremittance.example.com
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Wait for services to start
+      - name: Wait for Services to Start
+        run: sleep 60
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-
-      - name: Deploy Hotfix to Production
+      # Health checks
+      - name: Health Check for Backend Service
         run: |
-          echo "Deploying hotfix to production..."
-          # Add deployment script here
+          if ! curl --fail http://localhost:3000/health; then
+            echo "Backend service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Blockchain Service
+        run: |
+          if ! curl --fail http://localhost:4000/health; then
+            echo "Blockchain service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Web Service
+        run: |
+          if ! curl --fail http://localhost:8080; then
+            echo "Web service health check failed. Investigate the issue."
+            exit 1
+          fi
+
+      - name: Health Check for Mobile Service
+        run: |
+          if ! curl --fail http://localhost:8081; then
+            echo "Mobile service health check failed. Investigate the issue."
+            exit 1
+          fi

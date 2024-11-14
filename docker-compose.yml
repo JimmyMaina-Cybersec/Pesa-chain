@@ -1,37 +1,83 @@
 version: '3.8'
 
 services:
+  blockchain:
+    build:
+      context: ./Blockchain
+      dockerfile: Chaincode/Dockerfile
+      args:
+        ENV: ${NODE_ENV:-development}
+    image: pesachain/fabricNetwork:${IMAGE_TAG}
+    ports:
+      - "7051:7051"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "pgrep", "chaincode"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
   backend:
     build:
       context: ./Backend
       dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-development}
+    image: pesachain/backend:${IMAGE_TAG}
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - ./Backend:/app
     depends_on:
       - blockchain
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
-  blockchain:
+  frontend-mobile:
     build:
-      context: ./Blockchain/Chaincode
-      dockerfile: Dockerfile
+      context: ./frontend-mobile
+      args:
+        ENV: ${NODE_ENV:-development}
+    image: pesachain/frontend-mobile:${IMAGE_TAG}
+    depends_on:
+      - backend
     ports:
-      - "9999:9999"
-    environment:
-      - FABRIC_CFG_PATH=/chaincode/config
-    volumes:
-      - ./Blockchain/Chaincode:/chaincode
+      - "8081:8081"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
-  web:
+  frontend-web:
     build:
-      context: ./Frontend/Web
+      context: ./frontend-web
       dockerfile: Dockerfile
+      args:
+        ENV: ${NODE_ENV:-development}
+    image: pesachain/frontend-web:${IMAGE_TAG}
     ports:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
-  # Add any additional services or configurations as needed
+networks:
+  app-network:
+    driver: bridge
