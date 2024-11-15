@@ -38,9 +38,6 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=dev-${{ env.git_tag }}" >> $GITHUB_ENV
 
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
       # Parallel deployment of Docker images for development
       - name: Deploy Pesachain (Dev)
         run: |
@@ -108,9 +105,6 @@ jobs:
             echo "IMAGE_TAG=$IMAGE_TAG"
             echo "IMAGE_TAG=stag-${{ env.git_tag }}" >> $GITHUB_ENV
 
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
       # Parallel deployment of Docker images for development
       - name: Deploy Pesachain (Stag)
         run: |
@@ -177,9 +171,6 @@ jobs:
         run: |
             echo "IMAGE_TAG=$IMAGE_TAG"
             echo "IMAGE_TAG=dev-${{ env.git_tag }}" >> $GITHUB_ENV
-
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
 
       # Parallel deployment of Docker images for development
       - name: Deploy Pesachain (Prod)

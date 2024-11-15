@@ -94,10 +94,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
-
       - name: Build and Push Backend Docker Image
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
@@ -151,10 +147,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
 
       - name: Build and Push Blockchain Docker Image
         run: |
@@ -210,10 +202,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
-
       - name: Build and Push Frontend Docker Image (Web)
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
@@ -267,10 +255,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
 
       - name: Build and Push Frontend Docker Image (Mobile)
         run: |
