@@ -26,6 +26,11 @@ module.exports = [
     rules: {
       "@typescript-eslint/no-unused-vars": ["warn"],
       "@typescript-eslint/explicit-module-boundary-types": "off",
+      "no-trailing-spaces": "error", // Fix trailing spaces
+      "space-before-blocks": ["error", "always"], // Add space before blocks
+      indent: ["error", 2], // Enforce consistent indentation (2 spaces)
+      semi: ["error", "always"], // Enforce semicolons
+      "space-infix-ops": "error", // Enforce spaces around infix operators
     },
   },
   {
@@ -57,9 +62,9 @@ module.exports = [
       "vue/attribute-hyphenation": ["error", "always"],
       "no-console": "warn",
       "no-debugger": "error",
-      semi: ["error", "always"],
-      quotes: ["error", "double"],
-      indent: ["error", 2],
+      semi: ["error", "always"], // Enforce semicolons
+      quotes: ["error", "double"], // Enforce double quotes
+      indent: ["error", 2], // Enforce consistent indentation (2 spaces)
       "prettier/prettier": [
         "error",
         {
@@ -68,6 +73,12 @@ module.exports = [
           semi: true,
         },
       ],
+      "no-trailing-spaces": "error", // Remove trailing spaces
+      "space-before-blocks": ["error", "always"], // Add space before blocks
+      "space-infix-ops": "error", // Add space around infix operators
+      "no-multi-spaces": "error", // Disallow multiple spaces
+      "object-curly-spacing": ["error", "always"], // Ensure spacing inside curly braces
+      "array-bracket-spacing": ["error", "never"], // Remove space inside array brackets
     },
   },
 ];

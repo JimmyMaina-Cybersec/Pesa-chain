@@ -4,11 +4,12 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '35 12 * * *'
+    - cron: '0 0 * * 0'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
     strategy:
       matrix:
         node-version: [22]
@@ -22,21 +23,299 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm test
 
   semgrep:
     runs-on: ubuntu-20.04
+    if: github.actor != 'dependabot[bot]'
+
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     container:
       image: semgrep/semgrep
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Run Semgrep Scan
         run: semgrep ci
+
+  build-scan-push-backend-image:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Select Tagging scheme
+        id: get_tag
+        run: |
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Environment Tag Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Backend Docker Image
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production backend
+          else
+            docker-compose -f docker-compose.yml build backend
+          fi
+          docker-compose -f docker-compose.yml push backend
+
+  build-scan-push-blockchain-image:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Select Tagging scheme
+        id: get_tag
+        run: |
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Environment Tag Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Blockchain Docker Image
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production blockchain
+          else
+            docker-compose -f docker-compose.yml build blockchain
+          fi
+          docker-compose -f docker-compose.yml push blockchain
+
+  build-scan-push-web-image:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Select Tagging scheme
+        id: get_tag
+        run: |
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Environment Tag Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Frontend Docker Image (Web)
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production frontend-web
+          else
+            docker-compose -f docker-compose.yml build frontend-web
+          fi
+          docker-compose -f docker-compose.yml push frontend-web
+
+  build-scan-push-mobile-image:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Select Tagging scheme
+        id: get_tag
+        run: |
+          TAG=$(git tag --points-at HEAD)
+          if [ -z "$TAG" ]; then
+            echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Environment Tag Based on Branch
+        run: |
+          HEAD=${GITHUB_REF#refs/heads/}
+          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
+            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == release/* ]]; then
+            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
+          elif [[ "$HEAD" == "master" ]]; then
+            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build and Push Frontend Docker Image (Mobile)
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
+            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production frontend-mobile
+          else
+            docker-compose -f docker-compose.yml build frontend-mobile
+          fi
+          docker-compose -f docker-compose.yml push frontend-mobile
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' &&
+      github.event.schedule == '0 0 * * 0'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Clean up old Docker images
+        run: |
+          echo "Cleaning up old Docker images..."
+
+          # Set the Docker Hub repository name
+          REPO_NAME=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO_NAME }}
+
+          # Set the threshold for cleaning up images (e.g., 30 days)
+          THRESHOLD_DATE=$(date --date='30 days ago' +'%Y-%m-%d')
+
+          # Get the list of tags for the repository
+          TAGS=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags?page_size=100" | jq -r '.results[] | .name')
+
+          # Loop through each tag and delete it if older than the threshold date
+          for TAG in $TAGS; do
+            # Get the date when the image was last pushed
+            TAG_DATE=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/$TAG/" | jq -r '.last_updated')
+
+            # Convert the tag date to a comparable format
+            if [[ "$TAG_DATE" < "$THRESHOLD_DATE" ]]; then
+              echo "Deleting old tag: $TAG"
+
+              # Make a DELETE request to remove the tag from Docker Hub
+              curl -X DELETE "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/$TAG/" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}
+            fi
+          done
+
+          # Optionally: Remove dangling images (images with no tags)
+          docker image prune -f
+
+          echo "Old Docker images cleaned up."
