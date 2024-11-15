@@ -39,9 +39,8 @@ jobs:
 
   semgrep:
     runs-on: ubuntu-20.04
-    if: |
-      (github.event_name == 'schedule' && github.event.schedule == '35 12 * * *') &&
-      github.actor != 'dependabot[bot]'
+    if: github.event_name == 'schedule' && github.event.schedule == '35 12 * * *' && github.actor != 'dependabot[bot]'
+
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     container:
@@ -54,10 +53,8 @@ jobs:
 
   build-scan-push-backend-image:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+
 
     steps:
       - name: Checkout code
@@ -108,10 +105,8 @@ jobs:
 
   build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -163,10 +158,8 @@ jobs:
 
   build-scan-push-web-image:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -218,10 +211,8 @@ jobs:
 
   build-scan-push-mobile-image:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -274,8 +265,8 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '0 0 * * 0') ||
-      (github.event_name != 'push' && github.event_name != 'pull_request')
+      github.event_name == 'schedule' &&
+      github.event.schedule == '0 0 * * 0'
 
     steps:
       - name: Checkout repository
