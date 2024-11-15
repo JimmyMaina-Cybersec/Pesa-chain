@@ -7,7 +7,7 @@ services:
       dockerfile: Chaincode/Dockerfile
       args:
         ENV: ${NODE_ENV:-development}
-    image: pesachain/fabricNetwork:${IMAGE_TAG}
+    image: pesachain/fabric-network:${IMAGE_TAG}
     ports:
       - "7051:7051"
     networks:
