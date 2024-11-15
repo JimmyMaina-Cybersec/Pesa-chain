@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json separately to leverage Docker cache
 COPY package*.json ./
 
+# Debug step to check for package-lock.json
+RUN ls -l package-lock.json
+
 # Install dependencies based on environment
 ARG NODE_ENV=development
 RUN if [ "$NODE_ENV" = "production" ]; then npm install --only=production; else npm ci; fi

@@ -41,7 +41,7 @@ services:
 
   frontend-mobile:
     build:
-      context: ./frontend-mobile
+      context: ./Frontend/Mobile
       args:
         ENV: ${NODE_ENV:-development}
     image: pesachain/frontend-mobile:${IMAGE_TAG}
@@ -60,7 +60,7 @@ services:
 
   frontend-web:
     build:
-      context: ./frontend-web
+      context: ./Frontend/Web
       dockerfile: Dockerfile
       args:
         ENV: ${NODE_ENV:-development}
