@@ -92,6 +92,7 @@ jobs:
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
+          echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and Push Backend Docker Image
@@ -148,6 +149,7 @@ jobs:
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
+          echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and Push Blockchain Docker Image
@@ -204,6 +206,7 @@ jobs:
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
+          echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and Push Frontend Docker Image (Web)
@@ -260,6 +263,7 @@ jobs:
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
+          echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and Push Frontend Docker Image (Mobile)
