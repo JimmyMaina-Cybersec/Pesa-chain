@@ -61,24 +61,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
           TAG=$(git tag --points-at HEAD)
           if [ -z "$TAG" ]; then
             echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)"
             echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           else
             echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
@@ -94,6 +87,15 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Backend Docker Image
         run: |
@@ -116,26 +118,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2'
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
           TAG=$(git tag --points-at HEAD)
           if [ -z "$TAG" ]; then
             echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)"
             echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           else
             echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
@@ -144,13 +137,22 @@ jobs:
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
             IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
-          elif [[ "$HEAD" == release/* ]]; then
+          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
             IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Blockchain Docker Image
         run: |
@@ -173,26 +175,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2'
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
           TAG=$(git tag --points-at HEAD)
           if [ -z "$TAG" ]; then
             echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)"
             echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           else
             echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
@@ -201,13 +194,22 @@ jobs:
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
             IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
-          elif [[ "$HEAD" == release/* ]]; then
+          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
             IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Frontend Docker Image (Web)
         run: |
@@ -230,26 +232,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2'
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
           TAG=$(git tag --points-at HEAD)
           if [ -z "$TAG" ]; then
             echo "No tags found in the latest commit. Using commit hash."
+            echo "git_tag=$(git rev-parse --short HEAD)"
             echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           else
             echo "Using tag from the latest commit: $TAG"
+            echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
@@ -258,13 +251,22 @@ jobs:
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
             IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
-          elif [[ "$HEAD" == release/* ]]; then
+          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
             IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
           elif [[ "$HEAD" == "master" ]]; then
             IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Frontend Docker Image (Mobile)
         run: |
