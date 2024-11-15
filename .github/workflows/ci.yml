@@ -4,8 +4,8 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '35 12 * * *'
     - cron: '0 0 * * 0'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
 
   semgrep:
     runs-on: ubuntu-20.04
-    if: github.event_name == 'schedule' && github.event.schedule == '35 12 * * *' && github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]'
 
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
@@ -53,9 +53,10 @@ jobs:
 
   build-scan-push-backend-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
-
-
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -81,7 +82,7 @@ jobs:
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set env Based on Branch
+      - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
@@ -105,7 +106,10 @@ jobs:
 
   build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -134,7 +138,7 @@ jobs:
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set env Based on Branch
+      - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
@@ -158,7 +162,10 @@ jobs:
 
   build-scan-push-web-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -187,7 +194,7 @@ jobs:
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set env Based on Branch
+      - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
@@ -211,7 +218,10 @@ jobs:
 
   build-scan-push-mobile-image:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && !contains(github.ref, 'refs/heads/feature/') && !contains(github.ref, 'refs/heads/bugfix/')
+    if: |
+      github.event_name != 'schedule' &&
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -240,7 +250,7 @@ jobs:
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set env Based on Branch
+      - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
           if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
