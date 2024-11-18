@@ -30,7 +30,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: npm ci
 
@@ -71,7 +70,6 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -85,7 +83,6 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
-
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -98,7 +95,6 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -114,14 +110,12 @@ jobs:
             docker-compose -f docker-compose.yml build backend
           fi
           docker-compose -f docker-compose.yml push backend
-
   build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
       !contains(github.ref, 'refs/heads/feature/') &&
       !contains(github.ref, 'refs/heads/bugfix/')
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -136,7 +130,6 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -150,7 +143,6 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
-
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -163,7 +155,6 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -179,14 +170,12 @@ jobs:
             docker-compose -f docker-compose.yml build blockchain
           fi
           docker-compose -f docker-compose.yml push blockchain
-
   build-scan-push-web-image:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
       !contains(github.ref, 'refs/heads/feature/') &&
       !contains(github.ref, 'refs/heads/bugfix/')
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -201,7 +190,6 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -215,7 +203,6 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
-
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -228,7 +215,6 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -244,14 +230,12 @@ jobs:
             docker-compose -f docker-compose.yml build frontend-web
           fi
           docker-compose -f docker-compose.yml push frontend-web
-
   build-scan-push-mobile-image:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
       !contains(github.ref, 'refs/heads/feature/') &&
       !contains(github.ref, 'refs/heads/bugfix/')
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -266,7 +250,6 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
-
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -280,7 +263,6 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
-
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -293,7 +275,6 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -309,13 +290,11 @@ jobs:
             docker-compose -f docker-compose.yml build frontend-mobile
           fi
           docker-compose -f docker-compose.yml push frontend-mobile
-
   cleanup:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'schedule' &&
       github.event.schedule == '0 0 * * 0'
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -329,31 +308,23 @@ jobs:
       - name: Clean up old Docker images
         run: |
           echo "Cleaning up old Docker images..."
-
           # Set the Docker Hub repository name
           REPO_NAME=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO_NAME }}
-
           # Set the threshold for cleaning up images (e.g., 30 days)
           THRESHOLD_DATE=$(date --date='30 days ago' +'%Y-%m-%d')
-
           # Get the list of tags for the repository
           TAGS=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags?page_size=100" | jq -r '.results[] | .name')
-
           # Loop through each tag and delete it if older than the threshold date
           for TAG in $TAGS; do
             # Get the date when the image was last pushed
             TAG_DATE=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/$TAG/" | jq -r '.last_updated')
-
             # Convert the tag date to a comparable format
             if [[ "$TAG_DATE" < "$THRESHOLD_DATE" ]]; then
               echo "Deleting old tag: $TAG"
-
               # Make a DELETE request to remove the tag from Docker Hub
               curl -X DELETE "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/$TAG/" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}
             fi
           done
-
           # Optionally: Remove dangling images (images with no tags)
           docker image prune -f
-
           echo "Old Docker images cleaned up."
