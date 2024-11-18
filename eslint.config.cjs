@@ -11,6 +11,7 @@ const tsEslintPlugin = require("@typescript-eslint/eslint-plugin");
 /** @type {import('eslint').Linter.FlatConfig} */
 module.exports = [
   {
+    ignores: ["./Blockchain"],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsParser,
