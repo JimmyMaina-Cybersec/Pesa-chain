@@ -104,6 +104,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Check Docker Hub Login
+        run: docker info
+
       - name: Build and Push Backend Docker Image
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
