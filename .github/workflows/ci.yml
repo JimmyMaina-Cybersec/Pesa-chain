@@ -54,8 +54,11 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+      (github.event_name != 'pull_request' || (
+        !contains(github.head_ref, 'feature/') &&
+        !contains(github.head_ref, 'bugfix/')
+      ))
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -118,8 +121,11 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+      (github.event_name != 'pull_request' || (
+        !contains(github.head_ref, 'feature/') &&
+        !contains(github.head_ref, 'bugfix/')
+      ))
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -182,8 +188,11 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+      (github.event_name != 'pull_request' || (
+        !contains(github.head_ref, 'feature/') &&
+        !contains(github.head_ref, 'bugfix/')
+      ))
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -246,8 +255,11 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      !contains(github.ref, 'refs/heads/feature/') &&
-      !contains(github.ref, 'refs/heads/bugfix/')
+      (github.event_name != 'pull_request' || (
+        !contains(github.head_ref, 'feature/') &&
+        !contains(github.head_ref, 'bugfix/')
+      ))
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
