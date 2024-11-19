@@ -2,7 +2,6 @@ name: CI Pipeline for Pesa-chain
 # Testing pipeline triggers from feature branches - PASSED
 on:
   push:
-  pull_request:
   schedule:
     - cron: '0 0 * * 0'
 
@@ -108,7 +107,6 @@ jobs:
       - name: Build and Push Backend Docker Image
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
-          echo "BRANCH = $BRANCH"
           if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
             docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production backend
           else
