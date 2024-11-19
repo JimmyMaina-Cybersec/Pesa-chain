@@ -2,7 +2,6 @@ name: CI Pipeline for Pesa-chain
 # Testing pipeline triggers from feature branches - PASSED
 on:
   push:
-  pull_request:
   schedule:
     - cron: '0 0 * * 0'
 
@@ -54,13 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      (
-        (github.event_name != 'push' && github.event_name != 'pull_request') ||
-        (
-          !contains(github.ref, 'feature/') &&
-          !contains(github.ref, 'bugfix/')
-        )
-      )
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -124,13 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      (
-        (github.event_name != 'push' && github.event_name != 'pull_request') ||
-        (
-          !contains(github.ref, 'feature/') &&
-          !contains(github.ref, 'bugfix/')
-        )
-      )
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -194,13 +183,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      (
-        (github.event_name != 'push' && github.event_name != 'pull_request') ||
-        (
-          !contains(github.ref, 'feature/') &&
-          !contains(github.ref, 'bugfix/')
-        )
-      )
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
@@ -264,13 +248,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name != 'schedule' &&
-      (
-        (github.event_name != 'push' && github.event_name != 'pull_request') ||
-        (
-          !contains(github.ref, 'feature/') &&
-          !contains(github.ref, 'bugfix/')
-        )
-      )
+      !contains(github.ref, 'refs/heads/feature/') &&
+      !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
       - name: Checkout code
