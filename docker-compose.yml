@@ -5,7 +5,7 @@ services:
       dockerfile: Chaincode/Dockerfile
       args:
         ENV: ${NODE_ENV:-development}
-    image: pesachain/fabric-network:${IMAGE_TAG}
+    image: pesachain:fabric-network-${IMAGE_TAG}
     ports:
       - "7051:7051"
     networks:
@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_ENV: ${NODE_ENV:-development}
-    image: pesachain/backend:${IMAGE_TAG}
+    image: pesachain:backend-${IMAGE_TAG}
     ports:
       - "3000:3000"
     depends_on:
@@ -42,7 +42,7 @@ services:
       context: ./Frontend/Mobile
       args:
         ENV: ${NODE_ENV:-development}
-    image: pesachain/frontend-mobile:${IMAGE_TAG}
+    image: pesachain:frontend-mobile-${IMAGE_TAG}
     depends_on:
       - backend
     ports:
@@ -62,7 +62,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENV: ${NODE_ENV:-development}
-    image: pesachain/frontend-web:${IMAGE_TAG}
+    image: pesachain:frontend-web-${IMAGE_TAG}
     ports:
       - "80:80"
     depends_on:
