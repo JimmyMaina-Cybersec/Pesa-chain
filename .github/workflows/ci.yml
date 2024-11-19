@@ -1,5 +1,5 @@
 name: CI Pipeline for Pesa-chain
-
+# Testing pipeline triggers for bugfix branches
 on:
   push:
   pull_request:
