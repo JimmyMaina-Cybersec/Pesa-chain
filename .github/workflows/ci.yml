@@ -1,5 +1,5 @@
 name: CI Pipeline for Pesa-chain
-
+# Testing pipeline triggers from feature branches - PASSED
 on:
   push:
   pull_request:
