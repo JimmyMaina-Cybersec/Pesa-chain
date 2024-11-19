@@ -108,6 +108,7 @@ jobs:
       - name: Build and Push Backend Docker Image
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
+          echo "BRANCH = $BRANCH"
           if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
             docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production backend
           else
