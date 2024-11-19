@@ -70,6 +70,7 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
+
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -83,6 +84,7 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
+
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -95,6 +97,7 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -110,6 +113,7 @@ jobs:
             docker-compose -f docker-compose.yml build backend
           fi
           docker-compose -f docker-compose.yml push backend
+
   build-scan-push-blockchain-image:
     runs-on: ubuntu-latest
     if: |
@@ -130,6 +134,7 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
+
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -143,6 +148,7 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
+
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -155,6 +161,7 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -170,6 +177,7 @@ jobs:
             docker-compose -f docker-compose.yml build blockchain
           fi
           docker-compose -f docker-compose.yml push blockchain
+
   build-scan-push-web-image:
     runs-on: ubuntu-latest
     if: |
@@ -190,6 +198,7 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
+
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -203,6 +212,7 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
+
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -215,6 +225,7 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -230,6 +241,7 @@ jobs:
             docker-compose -f docker-compose.yml build frontend-web
           fi
           docker-compose -f docker-compose.yml push frontend-web
+
   build-scan-push-mobile-image:
     runs-on: ubuntu-latest
     if: |
@@ -250,6 +262,7 @@ jobs:
             echo "Docker Compose is already installed."
           fi
           docker-compose --version
+
       - name: Select Tagging scheme
         id: get_tag
         run: |
@@ -263,6 +276,7 @@ jobs:
             echo "git_tag=$TAG"
             echo "git_tag=$TAG" >> $GITHUB_OUTPUT
           fi
+
       - name: Set Environment Tag Based on Branch
         run: |
           HEAD=${GITHUB_REF#refs/heads/}
@@ -275,6 +289,7 @@ jobs:
           fi
           echo "IMAGE_TAG=$IMAGE_TAG"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -290,6 +305,7 @@ jobs:
             docker-compose -f docker-compose.yml build frontend-mobile
           fi
           docker-compose -f docker-compose.yml push frontend-mobile
+
   cleanup:
     runs-on: ubuntu-latest
     if: |
