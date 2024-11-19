@@ -5,7 +5,7 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Install build dependencies
-COPY package*.json ./
+COPY ./web/package*.json ./
 RUN npm install
 
 # Copy the rest of the application files
