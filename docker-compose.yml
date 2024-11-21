@@ -39,10 +39,10 @@ services:
 
   frontend-mobile:
     build:
-      context: ./Frontend/Mobile
+      context: ./Frontend/mobile
       args:
         ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:frontend-mobile-${IMAGE_TAG}
+    image: jimmymaina/pesachain:frontend-mobile-dev-cde
     depends_on:
       - backend
     ports:
