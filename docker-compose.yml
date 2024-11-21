@@ -42,7 +42,7 @@ services:
       context: ./Frontend/mobile
       args:
         ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:frontend-mobile-dev-cde
+    image: jimmymaina/pesachain:frontend-mobile-${IMAGE_TAG}
     depends_on:
       - backend
     ports:
