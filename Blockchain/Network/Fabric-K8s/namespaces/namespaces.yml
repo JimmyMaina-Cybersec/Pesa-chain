@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pesachain
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: org1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orderer
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fabric-ca

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: orderer0
+  namespace: orderer
+spec:
+  serviceName: "orderer0"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderer0
+  template:
+    metadata:
+      labels:
+        app: orderer0
+    spec:
+      containers:
+      - name: orderer0
+        image: hyperledger/fabric-orderer
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        volumeMounts:
+        - name: ordererdata
+          mountPath: /var/hyperledger/production
+  volumeClaimTemplates:
+  - metadata:
+      name: ordererdata
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi

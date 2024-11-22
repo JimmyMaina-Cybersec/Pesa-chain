@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fabric-ingress
+  namespace: pesachain
+spec:
+  rules:
+  - host: pesachain.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: peer0
+            port:
+              number: 7051
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fabric-ingress
+  namespace: orderer
+spec:
+  rules:
+  - host: orderer.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: orderer0
+            port:
+              number: 7050
