@@ -8,7 +8,7 @@ COPY . .
 RUN npm run android
 
 # ---- Stage for Android build ----
-FROM openjdk:23
+FROM ubuntu:latest
 
 # Set environment variables for Android build
 ENV ANDROID_HOME /root/Android/Sdk
@@ -16,7 +16,7 @@ ENV PATH $ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PA
 
 # Install Java (OpenJDK), Android SDK, and other build tools
 RUN apt update && \
-    apt install -y curl unzip && \
+    apt install -y -y openjdk-21-jdk curl unzip && \
     curl -s https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -o cmdline-tools.zip && \
     mkdir -p $ANDROID_HOME/cmdline-tools/latest && \
     unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools/latest && \
