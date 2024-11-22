@@ -13,10 +13,11 @@ FROM ubuntu:latest
 # Set environment variables for Android build
 ENV ANDROID_HOME /root/Android/Sdk
 ENV PATH $ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-amd64
 
 # Install Java (OpenJDK), Android SDK, and other build tools
 RUN apt update && \
-    apt install -y -y openjdk-21-jdk curl unzip && \
+    apt install -y openjdk-21-jdk curl unzip && \
     curl -s https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -o cmdline-tools.zip && \
     mkdir -p $ANDROID_HOME/cmdline-tools/latest && \
     unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools/latest && \
