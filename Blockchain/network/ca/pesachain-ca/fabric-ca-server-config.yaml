@@ -1,0 +1,79 @@
+version: 1.5.2
+port: 7055
+debug: false
+
+tls:
+  enabled: true
+  certfile: tls-cert.pem
+  keyfile: tls-key.pem
+  clientauth:
+    type: RequireAndVerifyClientCert
+    certfiles:
+      - tls-root-cert.pem
+
+ca:
+  name: PesachainOrgCA
+  keyfile: ca-key.pem
+  certfile: ca-cert.pem
+  chainfile: ca-chain.pem
+
+intermediate:
+  parentserver:
+    url: https://root-ca:7054
+    caname: RootCA
+
+crl:
+  expiry: 24h
+
+registry:
+  maxenrollments: -1
+  identities:
+    - name: admin
+      pass: ${ADMIN_PASSWORD}  # Will be populated from Vault
+      type: client
+      affiliation: ""
+      attrs:
+        hf.Registrar.Roles: "*"
+        hf.Registrar.DelegateRoles: "*"
+        hf.Revoker: true
+        hf.GenCRL: true
+        hf.Registrar.Attributes: "*"
+        hf.AffiliationMgr: true
+        hf.IntermediateCA: true
+
+identities:
+  passwordAttempts: 10
+
+signing:
+  default:
+    usage:
+      - digital signature
+    expiry: 8760h
+  profiles:
+    ca:
+      usage:
+        - cert sign
+        - crl sign
+      expiry: 43800h
+      caconstraint:
+        isca: true
+        maxpathlen: -1
+    peer:
+      usage:
+        - digital signature
+        - key encipherment
+        - server auth
+        - client auth
+      expiry: 8760h
+    client:
+      usage:
+        - client auth
+      expiry: 8760h
+
+bccsp:
+  default: SW
+  sw:
+    hash: SHA2
+    security: 256
+    filekeystore:
+      keystore: msp/keystore

@@ -1,0 +1,60 @@
+version: '2'
+
+services:
+  orderer0.pesachain.com:
+    container_name: orderer0.pesachain.com
+    extends:
+      file: docker-compose-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+    ports:
+      - "7050:7050"
+      - "9443:9443"
+    volumes:
+      - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer0.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer0.pesachain.com/tls:/var/hyperledger/orderer/tls
+    networks:
+      - byfn
+
+  orderer1.pesachain.com:
+    container_name: orderer1.pesachain.com
+    extends:
+      file: docker-compose-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9444
+    ports:
+      - "8050:7050"
+      - "9444:9444"
+    volumes:
+      - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer1.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer1.pesachain.com/tls:/var/hyperledger/orderer/tls
+    networks:
+      - byfn
+
+  orderer2.pesachain.com:
+    container_name: orderer2.pesachain.com
+    extends:
+      file: docker-compose-base.yaml
+      service: orderer-base
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9445
+    ports:
+      - "9050:7050"
+      - "9445:9445"
+    volumes:
+      - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer2.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ../crypto-config/ordererOrganizations/pesachain.com/orderers/orderer2.pesachain.com/tls:/var/hyperledger/orderer/tls
+    networks:
+      - byfn
+
+networks:
+  byfn:
+    name: fabric-ca-network

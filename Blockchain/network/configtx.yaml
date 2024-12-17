@@ -1,0 +1,161 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/pesachain.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &Pesachain
+    Name: PesachainMSP
+    ID: PesachainMSP
+    MSPDir: crypto-config/peerOrganizations/pesachain.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PesachainMSP.admin', 'PesachainMSP.peer', 'PesachainMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PesachainMSP.admin', 'PesachainMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PesachainMSP.admin')"
+    AnchorPeers:
+      - Host: peer0.pesachain.com
+        Port: 7051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer0.pesachain.com:7050
+    - orderer1.pesachain.com:7050
+    - orderer2.pesachain.com:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer0.pesachain.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer0.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer0.pesachain.com/tls/server.crt
+      - Host: orderer1.pesachain.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer1.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer1.pesachain.com/tls/server.crt
+      - Host: orderer2.pesachain.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer2.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/pesachain.com/orderers/orderer2.pesachain.com/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 500
+    AbsoluteMaxBytes: 98 MB
+    PreferredMaxBytes: 2 MB
+  Organizations:
+    - *OrdererOrg
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  OrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Consortiums:
+      BankInstitution:
+        Organizations:
+          - *Pesachain
+      PaymentGateways:
+        Organizations:
+          - *Pesachain
+      ComplianceEntities:
+        Organizations:
+          - *OrdererOrg
+          - *Pesachain
+
+  BankInstitutionChannel:
+    Consortium: BankInstitution
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Pesachain
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+  PaymentGatewaysChannel:
+    Consortium: PaymentGateways
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Pesachain
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+  ComplianceEntitiesChannel:
+    Consortium: ComplianceEntities
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *OrdererOrg
+        - *Pesachain
+      Capabilities:
+        <<: *ApplicationCapabilities

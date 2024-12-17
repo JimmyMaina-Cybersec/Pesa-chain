@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+  peer0.pesachain.com:
+    container_name: peer0.pesachain.com
+    extends:
+      file: docker-compose-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.pesachain.com
+      - CORE_PEER_ADDRESS=peer0.pesachain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.pesachain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.pesachain.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.pesachain.com:7051
+      - CORE_PEER_LOCALMSPID=PesachainMSP
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - "7051:7051"
+      - "9446:9446"
+    networks:
+      - byfn
+
+  peer1.pesachain.com:
+    container_name: peer1.pesachain.com
+    extends:
+      file: docker-compose-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.pesachain.com
+      - CORE_PEER_ADDRESS=peer1.pesachain.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.pesachain.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.pesachain.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.pesachain.com:8051
+      - CORE_PEER_LOCALMSPID=PesachainMSP
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9447
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - "8051:8051"
+      - "9447:9447"
+    networks:
+      - byfn
+
+networks:
+  byfn:
+    name: fabric-ca-network
