@@ -1,0 +1,123 @@
+{
+  "name": "pesachain-network",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Pesachain",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300",
+          "eventHub": "300",
+          "eventReg": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "organizations": {
+    "Pesachain": {
+      "mspid": "PesachainMSP",
+      "peers": ["peer0.pesachain.com", "peer1.pesachain.com"],
+      "certificateAuthorities": ["ca.pesachain.com"]
+    }
+  },
+  "peers": {
+    "peer0.pesachain.com": {
+      "url": "grpcs://peer0.pesachain.com:7051",
+      "tlsCACerts": {
+        "path": "/crypto-config/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.pesachain.com",
+        "hostnameOverride": "peer0.pesachain.com"
+      }
+    },
+    "peer1.pesachain.com": {
+      "url": "grpcs://peer1.pesachain.com:8051",
+      "tlsCACerts": {
+        "path": "/crypto-config/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer1.pesachain.com",
+        "hostnameOverride": "peer1.pesachain.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.pesachain.com": {
+      "url": "https://ca.pesachain.com:7054",
+      "caName": "ca.pesachain.com",
+      "tlsCACerts": {
+        "path": "/crypto-config/peerOrganizations/pesachain.com/ca/ca.pesachain.com-cert.pem"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  },
+  "orderers": {
+    "orderer0.pesachain.com": {
+      "url": "grpcs://orderer0.pesachain.com:7050",
+      "tlsCACerts": {
+        "path": "/crypto-config/ordererOrganizations/pesachain.com/orderers/orderer0.pesachain.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer0.pesachain.com",
+        "hostnameOverride": "orderer0.pesachain.com"
+      }
+    }
+  },
+  "channels": {
+    "bankinstitutions": {
+      "orderers": ["orderer0.pesachain.com"],
+      "peers": {
+        "peer0.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer1.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    },
+    "paymentgateways": {
+      "orderers": ["orderer0.pesachain.com"],
+      "peers": {
+        "peer0.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer1.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    },
+    "complianceentities": {
+      "orderers": ["orderer0.pesachain.com"],
+      "peers": {
+        "peer0.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer1.pesachain.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    }
+  }
+}
