@@ -17,7 +17,7 @@ Organizations:
   - &Pesachain
     Name: PesachainMSP
     ID: PesachainMSP
-    MSPDir: crypto-config/peerOrganizations/pesachain.com/msp
+    MSPDir: ca/pesachain-ca/msp
     Policies:
       Readers:
         Type: Signature
