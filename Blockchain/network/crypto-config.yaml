@@ -1,6 +1,6 @@
 OrdererOrgs:
   - Name: OrdererOrg
-    Domain: pesachain.com
+    Domain: orderer.pesachain.com
     EnableNodeOUs: true
     Specs:
       - Hostname: orderer0
@@ -9,7 +9,7 @@ OrdererOrgs:
 
 PeerOrgs:
   - Name: Pesachain
-    Domain: pesachain.com
+    Domain: org.pesachain.com
     EnableNodeOUs: true
     Template:
       Count: 2

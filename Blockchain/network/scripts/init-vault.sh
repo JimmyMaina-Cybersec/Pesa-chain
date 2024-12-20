@@ -1,20 +1,16 @@
 #!/bin/bash
 
 # Initialize Vault and store root token
-vault operator init > vault-keys.txt
+vault operator init > ../vault/vault-keys.txt
 
 # Unseal Vault using the generated keys
 for i in {1..3}; do
-  KEY=$(grep "Unseal Key $i" vault-keys.txt | cut -d: -f2 | tr -d ' ')
+  KEY=$(grep "Unseal Key $i" ../vault/vault-keys.txt | cut -d: -f2 | tr -d ' ')
   vault operator unseal $KEY
 done
 
 # Enable the KV secrets engine
 vault secrets enable -path=pesachain kv-v2
-
-# Create policies
-vault policy write pesachain-admin vault/config/policies/admin-policy.hcl
-vault policy write pesachain-ca vault/config/policies/ca-policy.hcl
 
 # Store initial secrets
 vault kv put pesachain/ca/admin \
@@ -24,7 +20,8 @@ vault kv put pesachain/ca/admin \
 vault kv put pesachain/auth0 \
   domain="${AUTH0_DOMAIN}" \
   client_id="${AUTH0_CLIENT_ID}" \
-  client_secret="${AUTH0_CLIENT_SECRET}"
+  client_secret="${AUTH0_CLIENT_SECRET}" \
+  client_audience="${AUTH0_CLIENT_AUDIENCE}"
 
 # Store TLS certificates
 vault kv put pesachain/tls \
