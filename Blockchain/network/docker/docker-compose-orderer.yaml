@@ -14,8 +14,8 @@ services:
       - "9443:9443"
     volumes:
       - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ../orderers/orderer0.pesachain.com/msp:/var/hyperledger/orderer/msp
-      - ../orderers/orderer0.pesachain.com/tls:/var/hyperledger/orderer/tls
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls:/var/hyperledger/orderer/tls
     networks:
       - byfn
 
@@ -32,8 +32,8 @@ services:
       - "9444:9444"
     volumes:
       - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ../orderers/orderer1.pesachain.com/msp:/var/hyperledger/orderer/msp
-      - ../orderers/orderer1.pesachain.com/tls:/var/hyperledger/orderer/tls
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls:/var/hyperledger/orderer/tls
     networks:
       - byfn
 
@@ -50,8 +50,8 @@ services:
       - "9445:9445"
     volumes:
       - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ../orderers/orderer2.pesachain.com/msp:/var/hyperledger/orderer/msp
-      - ../orderers/orderer2.pesachain.com/tls:/var/hyperledger/orderer/tls
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/msp:/var/hyperledger/orderer/msp
+      - ..crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls:/var/hyperledger/orderer/tls
     networks:
       - byfn
 

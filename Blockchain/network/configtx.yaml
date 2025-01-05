@@ -2,7 +2,7 @@ Organizations:
   - &OrdererOrg
     Name: OrdererOrg
     ID: OrdererMSP
-    MSPDir: orderers/msp
+    MSPDir: crypto-config/ordererOrganizations/orderer.pesachain.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -17,7 +17,7 @@ Organizations:
   - &Pesachain
     Name: PesachainMSP
     ID: PesachainMSP
-    MSPDir: ca/pesachain-ca/msp
+    MSPDir: crypto-config/peerOrganizations/org.pesachain.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -65,16 +65,16 @@ Orderer: &OrdererDefaults
     Consenters:
       - Host: orderer0.pesachain.com
         Port: 7050
-        ClientTLSCert: orderers/orderer0.pesachain.com/tls/client.crt
-        ServerTLSCert: orderers/orderer0.pesachain.com/tls/server.crt
+        ClientTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls/server.crt
       - Host: orderer1.pesachain.com
         Port: 7050
-        ClientTLSCert: orderers/orderer1.pesachain.com/tls/client.crt
-        ServerTLSCert: orderers/orderer1.pesachain.com/tls/server.crt
+        ClientTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls/server.crt
       - Host: orderer2.pesachain.com
         Port: 7050
-        ClientTLSCert: orderers/orderer2.pesachain.com/tls/client.crt
-        ServerTLSCert: orderers/orderer2.pesachain.com/tls/server.crt
+        ClientTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/server.crt
   BatchTimeout: 2s
   BatchSize:
     MaxMessageCount: 500

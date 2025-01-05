@@ -18,8 +18,8 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
-      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/msp:/etc/hyperledger/fabric/msp
-      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/tls:/etc/hyperledger/fabric/tls
+      - ../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/tls:/etc/hyperledger/fabric/tls
+      - ../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/msp:/etc/hyperledger/fabric/msp
     ports:
       - "7051:7051"
       - "9446:9446"
@@ -43,8 +43,8 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9447
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
-      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/msp:/etc/hyperledger/fabric/msp
-      - ../crypto-config/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/tls:/etc/hyperledger/fabric/tls
+      - ../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/tls:/etc/hyperledger/fabric/tls
     ports:
       - "8051:8051"
       - "9447:9447"
