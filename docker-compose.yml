@@ -28,15 +28,15 @@ services:
       - "3000:3000"
     depends_on:
       - blockchain
-    # develop:
-    #   watch:
-    #     - path: ./Backend/package.json
-    #       action: rebuild
-    #     - path: ./Backend/package-lock.jsin
-    #       action: rebuild
-    #     - path: ./Backend
-    #       target: /app
-    #       action: sync
+    develop:
+      watch:
+        - path: ./Backend/package.json
+          action: rebuild
+        - path: ./Backend/package-lock.jsin
+          action: rebuild
+        - path: ./Backend
+          target: /app
+          action: sync
     networks:
       - app-network
     healthcheck:
@@ -54,15 +54,15 @@ services:
     image: jimmymaina/pesachain:frontend-mobile-${IMAGE_TAG}
     depends_on:
       - backend
-    # develop:
-    #   watch:
-    #     - path: ./Frontend/mobile/package.json
-    #       action: rebuild
-    #     - path: ./Frontend/mobile/package-lock.jsin
-    #       action: rebuild
-    #     - path: ./Frontend/mobile
-    #       target: /app
-    #       action: sync
+    develop:
+      watch:
+        - path: ./Frontend/mobile/package.json
+          action: rebuild
+        - path: ./Frontend/mobile/package-lock.jsin
+          action: rebuild
+        - path: ./Frontend/mobile
+          target: /app
+          action: sync
     ports:
       - "8081:8081"
     networks:
@@ -85,15 +85,15 @@ services:
       - "8080:8080"
     depends_on:
       - backend
-    # develop:
-    #   watch:
-    #     - path: ./Frontend/web/package.json
-    #       action: rebuild
-    #     - path: ./Frontend/web/package-lock.jsin
-    #       action: rebuild
-    #     - path: ./Frontend/web
-    #       target: /app
-    #       action: sync
+    develop:
+      watch:
+        - path: ./Frontend/web/package.json
+          action: rebuild
+        - path: ./Frontend/web/package-lock.jsin
+          action: rebuild
+        - path: ./Frontend/web
+          target: /app
+          action: sync
     networks:
       - app-network
     healthcheck:
