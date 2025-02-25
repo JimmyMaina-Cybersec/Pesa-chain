@@ -145,7 +145,7 @@ services:
         }
     command: "vault server"
     networks:
-      - app_network
+      - app-network
 
   vault-node3:
     image: hashicorp/vault:latest
