@@ -192,7 +192,7 @@ main() {
         exit 1
     fi
 
-    MSP_DIR="crypto-config/${ORG_NAME}/msp"
+    MSP_DIR="../crypto-config/peerOrganizations/${ORG_NAME}/msp"
     log "Creating MSP directory structure at '$MSP_DIR'..."
     mkdir -p "$MSP_DIR"/{admincerts,cacerts,tlscacerts,keystore,signcerts}
 
@@ -201,7 +201,7 @@ main() {
 
     log "Issuing admin certificate for $ORG_NAME..."
     if ! error_message=$(kubectl exec -i VAULT-0 -n "$NAMESPACE" -- vault write pesachain_pki/issue/new_organizations \
-        common_name="admin@${ORG_NAME}.${ORG_DOMAIN}" \
+        common_name="admin@${ORG_DOMAIN}" \
         ttl="8760h" -format=json | jq -r .data.certificate > /tmp/"$ORG_NAME"-admin-cert.pem); then
             logError "Failed to issue admin certificate for $ORG_NAME"
             clean_up_vault
