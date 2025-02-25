@@ -1,107 +1,173 @@
 services:
-  blockchain:
-    build:
-      context: ./Blockchain
-      dockerfile: Chaincode/Dockerfile
-      args:
-        ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:blockchain${IMAGE_TAG}
-    ports:
-      - "7051:7051"
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "pgrep", "chaincode"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+  # blockchain:
+  #   build:
+  #     context: ./Blockchain
+  #     dockerfile: Chaincode/Dockerfile
+  #     args:
+  #       ENV: ${NODE_ENV:-development}
+  #   image: jimmymaina/pesachain:blockchain${IMAGE_TAG}
+  #   ports:
+  #     - "7051:7051"
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD", "pgrep", "chaincode"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 5s
 
-  backend:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile
-      args:
-        NODE_ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:backend-${IMAGE_TAG}
-    ports:
-      - "3000:3000"
-    depends_on:
-      - blockchain
-    develop:
-      watch:
-        - path: ./Backend/package.json
-          action: rebuild
-        - path: ./Backend/package-lock.jsin
-          action: rebuild
-        - path: ./Backend
-          target: /app
-          action: sync
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+  # backend:
+  #   build:
+  #     context: ./Backend
+  #     dockerfile: Dockerfile
+  #     args:
+  #       NODE_ENV: ${NODE_ENV:-development}
+  #   image: jimmymaina/pesachain:backend-${IMAGE_TAG}
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - blockchain
+  #   develop:
+  #     watch:
+  #       - path: ./Backend/package.json
+  #         action: rebuild
+  #       - path: ./Backend/package-lock.jsin
+  #         action: rebuild
+  #       - path: ./Backend
+  #         target: /app
+  #         action: sync
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "--fail", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 5s
 
-  frontend-mobile:
-    build:
-      context: ./Frontend/mobile
-      args:
-        ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:frontend-mobile-${IMAGE_TAG}
-    depends_on:
-      - backend
-    develop:
-      watch:
-        - path: ./Frontend/mobile/package.json
-          action: rebuild
-        - path: ./Frontend/mobile/package-lock.jsin
-          action: rebuild
-        - path: ./Frontend/mobile
-          target: /app
-          action: sync
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8081"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+  # frontend-mobile:
+  #   build:
+  #     context: ./Frontend/mobile
+  #     args:
+  #       ENV: ${NODE_ENV:-development}
+  #   image: jimmymaina/pesachain:frontend-mobile-${IMAGE_TAG}
+  #   depends_on:
+  #     - backend
+  #   develop:
+  #     watch:
+  #       - path: ./Frontend/mobile/package.json
+  #         action: rebuild
+  #       - path: ./Frontend/mobile/package-lock.jsin
+  #         action: rebuild
+  #       - path: ./Frontend/mobile
+  #         target: /app
+  #         action: sync
+  #   ports:
+  #     - "8081:8081"
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "--fail", "http://localhost:8081"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 5s
 
-  frontend-web:
-    build:
-      context: ./Frontend/web/
-      dockerfile: Dockerfile
-      args:
-        ENV: ${NODE_ENV:-development}
-    image: jimmymaina/pesachain:frontend-web-${IMAGE_TAG}
+  # frontend-web:
+  #   build:
+  #     context: ./Frontend/web/
+  #     dockerfile: Dockerfile
+  #     args:
+  #       ENV: ${NODE_ENV:-development}
+  #   image: jimmymaina/pesachain:frontend-web-${IMAGE_TAG}
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - backend
+  #   develop:
+  #     watch:
+  #       - path: ./Frontend/web/package.json
+  #         action: rebuild
+  #       - path: ./Frontend/web/package-lock.jsin
+  #         action: rebuild
+  #       - path: ./Frontend/web
+  #         target: /app
+  #         action: sync
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "--fail", "http://localhost:80"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 5s
+
+  vault-node1:
+    image: hashicorp/vault:latest
+    container_name: vault-node1
+    cap_add:
+      - IPC_LOCK
     ports:
-      - "8080:8080"
-    depends_on:
-      - backend
-    develop:
-      watch:
-        - path: ./Frontend/web/package.json
-          action: rebuild
-        - path: ./Frontend/web/package-lock.jsin
-          action: rebuild
-        - path: ./Frontend/web
-          target: /app
-          action: sync
+      - "8200:8200"
+    volumes:
+      - ./Vault/vault-node1:/vault/file
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "listener": [{"tcp": {"address": "0.0.0.0:8200", "tls_disable": true}}],
+          "storage": {"raft": {"path": "/vault/file", "node_id": "node1"}},
+          "ui": true,
+          "api_addr": "http://vault-node1:8200",
+          "cluster_addr": "http://vault-node1:8201"
+        }
+    command: "vault server"
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+
+  vault-node2:
+    image: hashicorp/vault:latest
+    container_name: vault-node2
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8202:8200"
+    volumes:
+      - ./Vault/vault-node2:/vault/file
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "listener": [{"tcp": {"address": "0.0.0.0:8200", "tls_disable": true}}],
+          "storage": {"raft": {"path": "/vault/file", "node_id": "node2"}},
+          "ui": true,
+          "api_addr": "http://vault-node2:8200",
+          "cluster_addr": "http://vault-node2:8201"
+        }
+    command: "vault server"
+    networks:
+      - app_network
+
+  vault-node3:
+    image: hashicorp/vault:latest
+    container_name: vault-node3
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8203:8200"
+    volumes:
+      - ./Vault/vault-node3:/vault/file
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "listener": [{"tcp": {"address": "0.0.0.0:8200", "tls_disable": true}}],
+          "storage": {"raft": {"path": "/vault/file", "node_id": "node3"}},
+          "ui": true,
+          "api_addr": "http://vault-node3:8200",
+          "cluster_addr": "http://vault-node3:8201"
+        }
+    command: "vault server"
+    networks:
+      - app-network
 
 networks:
   app-network:
