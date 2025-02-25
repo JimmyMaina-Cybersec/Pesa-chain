@@ -3,15 +3,7 @@
 set -e
 set -o pipefail
 
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
-}
-
-# Exit on error function
-exit_on_error() {
-    log "$1"
-    exit 1
-}
+source init-vault.sh
 
 # Retry a command a given number of times
 retry_command() {
@@ -20,12 +12,12 @@ retry_command() {
     local command="${@:3}"
 
     for ((i=1; i<=retries; i++)); do
-        $command && return 0
+        if ! $command && return 0
         log "Attempt $i failed. Retrying in $delay seconds..."
         sleep $delay
+        if $i = $retries; then
+            exit_on_error "Command failed after $retries attempts: $command"
     done
-
-    exit_on_error "Command failed after $retries attempts: $command"
 }
 
 # Initialize Vault if not already initialized
@@ -37,8 +29,8 @@ fi
 
 # Get CA admin credentials from Vault
 log "Retrieving CA admin credentials from Vault..."
-export FABRIC_CA_ADMIN_USER=$(vault kv get -field=username pesachain/org.pesachain.com/user/admin) || exit_on_error "Failed to get CA admin username from Vault."
-export FABRIC_CA_ADMIN_PASSWORD=$(vault kv get -field=password pesachain/org.pesachain.com/user/admin) || exit_on_error "Failed to get CA admin password from Vault."
+export FABRIC_CA_ADMIN_USER=$(vault kv get -field=username pesachain/org.pesachain.com/user/admin_creds) || exit_on_error "Failed to get CA admin username from Vault."
+export FABRIC_CA_ADMIN_PASSWORD=$(vault kv get -field=password pesachain/org.pesachain.com/user/admin_creds) || exit_on_error "Failed to get CA admin password from Vault."
 
 # Retrieve certificates from Vault and store them in temporary files
 log "Retrieving certificates from Vault..."
@@ -72,7 +64,8 @@ done
 
 # Start CA services with credentials from Vault
 log "Starting CA services..."
-retry_command 5 10 "docker-compose -f docker/docker-compose-ca.yaml up -d" || exit_on_error "Failed to start CA services."
+sleep 3
+retry_command 5 10 "docker-compose -f ../docker/docker-compose-ca.yaml up -d" || exit_on_error "Failed to start CA services."
 
 # Wait for CAs to be ready
 log "Waiting for CAs to be ready..."

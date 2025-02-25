@@ -112,38 +112,136 @@ exit_on_error() {
   exit 1
 }
 
-# Function to insert data into MongoDB
-mongo_insert() {
-  local key=$1
-  local value=$2
-  local json_doc="{\"key\":\"$key\", \"value\":\"$value\"}"
+# Function to clean up the Vault namespace and associated resources
+clean_up_vault() {
+  log "Starting cleanup process..."
+  sleep 2
 
-  # Attempt to insert
-  result=$(echo "db.BackupCertsAndCreds.insertOne($json_doc)" | mongosh "${MONGO_URI}" 2>&1)
-  if [[ $? -eq 0 ]]; then
-    logSuccess "Successfully backed up $key to MongoDB."
+  # 1. Uninstall the Vault Helm release (this should delete Vault pods)
+  if helm list -n "$NAMESPACE" | grep -q "^vault"; then
+    log "Uninstalling Helm release 'vault'..."
+    helm uninstall vault --namespace "$NAMESPACE" || logError "Failed to uninstall Helm release 'vault'."
+    logSuccess "Helm release 'vault' uninstalled successfully."
   else
-    logWarning "Failed to back up $key to MongoDB. Error: $result"
+    log "Helm release 'vault' not found in namespace $NAMESPACE."
   fi
+
+  sleep 3
+
+  # 2. Ensure Vault pods are deleted (use a label selector appropriate to your deployment)
+  if kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=vault &> /dev/null; then
+    log "Deleting any remaining Vault pods..."
+    kubectl delete pod -l app.kubernetes.io/name=vault -n "$NAMESPACE" --wait --timeout=60s || logWarning "Vault pods did not terminate within the timeout."
+  else
+    log "No Vault pods found in namespace $NAMESPACE."
+  fi
+
+  sleep 3
+
+  # 3. Delete all Persistent Volume Claims in the namespace
+  if kubectl get pvc -n "$NAMESPACE" &> /dev/null; then
+    log "Deleting Persistent Volume Claims (PVCs) in namespace $NAMESPACE..."
+    kubectl delete pvc --all -n "$NAMESPACE" --wait || logError "Failed to delete PVCs in namespace $NAMESPACE."
+    kubectl wait --for=delete pvc --all -n "$NAMESPACE" --timeout=60s || logError "PVCs were not deleted in namespace $NAMESPACE within the timeout."
+  else
+    log "No Persistent Volume Claims (PVCs) found in namespace $NAMESPACE."
+  fi
+
+  sleep 3
+
+  # 4. Delete ClusterRoles and ClusterRoleBindings associated with Vault
+  if kubectl get clusterrole vault-agent-injector-clusterrole &> /dev/null; then
+    log "Deleting ClusterRole vault-agent-injector-clusterrole..."
+    kubectl delete clusterrole vault-agent-injector-clusterrole || logError "Failed to delete ClusterRole vault-agent-injector-clusterrole."
+    kubectl wait --for=delete clusterrole vault-agent-injector-clusterrole --timeout=60s || logError "ClusterRole vault-agent-injector-clusterrole was not deleted within the timeout."
+  else
+    log "ClusterRole vault-agent-injector-clusterrole not found."
+  fi
+
+  if kubectl get clusterrolebinding vault-agent-injector-binding &> /dev/null; then
+    log "Deleting ClusterRoleBinding vault-agent-injector-binding..."
+    kubectl delete clusterrolebinding vault-agent-injector-binding || logError "Failed to delete ClusterRoleBinding vault-agent-injector-binding."
+    kubectl wait --for=delete clusterrolebinding vault-agent-injector-binding --timeout=60s || logError "ClusterRoleBinding vault-agent-injector-binding was not deleted within the timeout."
+  else
+    log "ClusterRoleBinding vault-agent-injector-binding not found."
+  fi
+
+  sleep 3
+
+  # 5. Delete any lingering Helm release secrets from kube-system
+  if kubectl get secrets -n kube-system | grep -q "^sh.helm.release.v1.vault"; then
+    log "Deleting Helm release secrets..."
+    secrets=$(kubectl get secrets -n kube-system | grep "^sh.helm.release.v1.vault" | awk '{print $1}')
+    if [[ -n "$secrets" ]]; then
+      kubectl delete secret -n kube-system $secrets || logError "Failed to delete Helm release secrets."
+    else
+      logWarning "No matching Helm release secrets found after filtering."
+    fi
+  else
+    log "Helm release secrets not found in kube-system."
+  fi
+
+  sleep 3
+
+  # 6. Finally, delete the namespace (which removes any leftover namespaced resources)
+  if kubectl get namespace "$NAMESPACE" &> /dev/null; then
+    log "Deleting namespace $NAMESPACE..."
+    kubectl delete namespace "$NAMESPACE" --wait --timeout=60s || logWarning "Initial delete attempt for namespace $NAMESPACE failed. Retrying..."
+    for attempt in {1..5}; do
+      kubectl delete namespace "$NAMESPACE" --ignore-not-found=true &> /dev/null
+      if ! kubectl get namespace "$NAMESPACE" &> /dev/null; then
+        logSuccess "Namespace $NAMESPACE successfully deleted."
+        break
+      else
+        logWarning "Retry $attempt: Namespace $NAMESPACE still exists. Waiting..."
+        sleep 3
+      fi
+      if [[ $attempt -eq 5 ]]; then
+        logError "Failed to delete namespace $NAMESPACE after 5 attempts."
+        sleep 1
+        exit 1
+      fi
+    done
+  else
+    log "Namespace $NAMESPACE not found. Skipping namespace deletion."
+  fi
+
+  logSuccess "Cleanup completed."
+  sleep 1
 }
+
+# Function to insert data into MongoDB
+# mongo_insert() {
+#   local key=$1
+#   local value=$2
+#   local json_doc="{\"key\":\"$key\", \"value\":\"$value\"}"
+
+#   # Attempt to insert
+#   result=$(echo "db.BackupCertsAndCreds.insertOne($json_doc)" | mongosh "${MONGO_URI}" 2>&1)
+#   if [[ $? -eq 0 ]]; then
+#     logSuccess "Successfully backed up $key to MongoDB."
+#   else
+#     logWarning "Failed to back up $key to MongoDB. Error: $result"
+#   fi
+# }
 
 # Function to check if a certificate exists in Vault before backing up
 check_and_store_certificate() {
   local vault_path=$1
-  if kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" > /dev/null 2>&1; then
+  if kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" > /dev/null 2>&1; then
     logSuccess "Found $vault_path in Vault. Retrieving and storing in MongoDB..."
     sleep 3
-    cert_data=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" | jq -r '.data.data')
+    cert_data=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" | jq -r '.data.data')
     mongo_insert "$vault_path" "$cert_data"
   else
-    error_message=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" 2>&1)
+    error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv get -format=json "$vault_path" 2>&1)
     logWarning "$vault_path not found in Vault. Skipping its backup. Error: $error_message"
   fi
 }
 
 # Function to back up certificates from Vault to MongoDB
 backup_certificates() {
-  vault_paths=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv list -format=json "pesachain" 2>/dev/null | jq -r '.[]')
+  vault_paths=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv list -format=json "pesachain" 2>/dev/null | jq -r '.[]')
   total_certificates=0
   skipped_certificates=0
   if [[ -z "$vault_paths" ]]; then
@@ -164,7 +262,7 @@ backup_certificates() {
 
 # Function to retrieve and store Auth0 secrets in MongoDB
 backup_auth0_secrets() {
-  auth0_paths=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv list -format=json "pesachain/auth0" | jq -r '.[]')
+  auth0_paths=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv list -format=json "pesachain/auth0" | jq -r '.[]')
 
   if [[ -z "$auth0_paths" ]]; then
     logWarning "No Auth0 secrets found under 'pesachain/auth0'. Skipping backup."
@@ -173,8 +271,8 @@ backup_auth0_secrets() {
 
   for auth0_secret in $auth0_paths; do
     full_auth0_path="pesachain/auth0/$auth0_secret"
-    if kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv get -format=json "$full_auth0_path" > /dev/null 2>&1; then
-      secret_data=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv get -format=json "$full_auth0_path" | jq -r '.data.data')
+    if kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv get -format=json "$full_auth0_path" > /dev/null 2>&1; then
+      secret_data=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv get -format=json "$full_auth0_path" | jq -r '.data.data')
       mongo_insert "$full_auth0_path" "$secret_data"
     else
       logWarning "Failed to retrieve Auth0 secret: $auth0_secret. Skipping..."
@@ -183,101 +281,6 @@ backup_auth0_secrets() {
   done
 
   logSuccess "Auth0 secrets backup to MongoDB completed."
-}
-
-# Function to clean up the Vault namespace and associated resources
-clean_up_vault() {
-  log "Starting cleanup process..."
-  sleep 2
-
-  # Check if NAMESPACE is non-empty and delete it
-  if [[ -n "$NAMESPACE" ]]; then
-    kubectl delete namespace "$NAMESPACE" --wait --timeout=300s || logError "Failed to delete namespace $NAMESPACE."
-
-    # Retry logic for deleting the namespace
-    for attempt in {1..5}; do
-      if kubectl get namespace "$NAMESPACE" &> /dev/null; then
-        logWarning "Retry $attempt: Namespace $NAMESPACE still exists. Waiting..."
-        sleep 3
-      else
-        logSuccess "Namespace $NAMESPACE successfully deleted."
-        break
-      fi
-
-      if [[ $attempt -eq 5 ]]; then
-        logError "Failed to delete namespace $NAMESPACE after 5 attempts."
-        sleep 1
-        exit 1
-      fi
-    done
-  else
-    log "NAMESPACE is not set. Skipping namespace deletion..."
-    sleep 1
-  fi
-
-  # Delete Persistent Volume Claims (PVCs) if any
-  if kubectl get pvc -n "$NAMESPACE" &> /dev/null; then
-    sleep 1
-    log "Deleting Persistent Volume Claims (PVCs)..."
-    sleep 3
-    kubectl delete pvc --all -n "$NAMESPACE" --wait || logError "Failed to delete PVCs in namespace $NAMESPACE."
-    kubectl wait --for=delete pvc --all -n "$NAMESPACE" --timeout=60s || logError "PVCs were not deleted in namespace $NAMESPACE within the timeout."
-  else
-  echo
-    log "No Persistent Volume Claims (PVCs) found."
-  fi
-
-  # Delete ClusterRoles and ClusterRoleBindings associated with Vault
-  if kubectl get clusterrole vault-agent-injector-clusterrole &> /dev/null; then
-    sleep 1
-    log "Deleting ClusterRole vault-agent-injector-clusterrole..."
-    echo
-    sleep 3
-    kubectl delete clusterrole vault-agent-injector-clusterrole || logError "Failed to delete ClusterRole vault-agent-injector-clusterrole."
-    kubectl wait --for=delete clusterrole vault-agent-injector-clusterrole --timeout=60s || logError "ClusterRole vault-agent-injector-clusterrole was not deleted within the timeout."
-  else
-    echo
-    log "ClusterRole vault-agent-injector-clusterrole not found."
-  fi
-
-  if kubectl get clusterrolebinding vault-agent-injector-binding &> /dev/null; then
-    sleep 1
-    log "Deleting ClusterRoleBinding vault-agent-injector-binding..."
-    echo
-    sleep 3
-    kubectl delete clusterrolebinding vault-agent-injector-binding || logError "Failed to delete ClusterRoleBinding vault-agent-injector-binding."
-    kubectl wait --for=delete clusterrolebinding vault-agent-injector-binding --timeout=60s || logError "ClusterRoleBinding vault-agent-injector-binding was not deleted within the timeout."
-  else
-    log "ClusterRoleBinding vault-agent-injector-binding not found."
-  fi
-
-  # Purge Helm release
-  if helm list -n "$NAMESPACE" | grep -q "^vault"; then
-    sleep 1
-    log "Uninstalling Helm release 'vault'..."
-    sleep 3
-    helm uninstall vault --namespace "$NAMESPACE" || logError "Failed to uninstall Helm release 'vault'."
-    logSuccess "Helm release 'vault' uninstalled successfully."
-  else
-    log "Helm release 'vault' not found in namespace $NAMESPACE."
-  fi
-
-  if kubectl get secrets -n kube-system | grep -q "^sh.helm.release.v1.vault"; then
-  sleep 1
-  log "Deleting Helm release secrets..."
-  sleep 3
-  secrets=$(kubectl get secrets -n kube-system | grep "^sh.helm.release.v1.vault" | awk '{print $1}')
-  if [[ -n "$secrets" ]]; then
-    kubectl delete secret -n kube-system $secrets || logError "Failed to delete Helm release secrets."
-  else
-    logWarning "No matching Helm release secrets found after filtering."
-  fi
-else
-  log "Helm release secrets not found."
-fi
-
-  logSuccess "Cleanup completed."
-  sleep 1
 }
 
 trap 'rm -f /tmp/vault-init.json; rm -rf ../vault-cred/*' EXIT
@@ -308,143 +311,202 @@ validate_env_vars() {
     AUTH0_CLIENT_ID
     AUTH0_CLIENT_SECRET
     AUTH0_AUDIENCE
-    MONGO_URI
     NAMESPACE
   )
 
   log "Ensuring all required environment variables are set..."
   sleep 3
   for var in "${required_vars[@]}"; do
-    if [[ -z "${!var}" ]]; then
+    if [[ -z "${!var}" ]]; then # indirect expansion
       logError "Missing environment variable: $var"
       exit 1
     fi
   done
 
-  log "Checking if MongoDB client (mongosh) is installed..."
-  sleep 3
-  if ! command -v mongosh &> /dev/null; then
-    logError "MongoDB client (mongosh) is not installed or not in PATH. Aborting operation."
-    exit 1
-  fi
+  # log "Checking if MongoDB client (mongosh) is installed..."
+  # sleep 3
+  # if ! command -v mongosh &> /dev/null; then
+  #   logError "MongoDB client (mongosh) is not installed or not in PATH. Aborting operation."
+  #   exit 1
+  # fi
 
-  log "Verifying MongoDB server is accessible..."
-  if ! mongosh "${MONGO_URI}" --eval "db.runCommand({ ping: 1 })" &> /dev/null; then
-    logError "MongoDB server is not accessible. Please check if it's running and accessible at ${MONGO_URI}."
-    exit 1
-  fi
+  # log "Verifying MongoDB server is accessible..."
+  # if ! mongosh "${MONGO_URI}" --eval "db.runCommand({ ping: 1 })" &> /dev/null; then
+  #   logError "MongoDB server is not accessible. Please check if it's running and accessible at ${MONGO_URI}."
+  #   exit 1
+  # fi
 
-  logSuccess "All environment variables are set and MongoDB is accessible."
+  logSuccess "All environment variables are set."
 }
 
-# Function to check Vault pod status
+# Function to check status of all Vault pods in the HA Raft cluster
 check_vault_pod_status() {
-    for i in $(seq 1 "$MAX_RETRIES"); do
-      POD_STATUS=$(kubectl get pod VAULT-0 -n "$NAMESPACE" --output=jsonpath='{.status.phase}' 2>/dev/null || echo "NotFound")
+  for i in $(seq 1 "$MAX_RETRIES"); do
+    # Get the list of Vault pods dynamically
+    PODS=($(kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=vault --output=jsonpath='{.items[*].metadata.name}'))
+
+    if [[ ${#PODS[@]} -eq 0 ]]; then
+      logWarning "There are no vault pods running. Proceeding to deploy..."
+      return false
+    fi
+
+    all_running=true
+
+    for pod in "${PODS[@]}"; do
+      POD_STATUS=$(kubectl get pod "$pod" -n "$NAMESPACE" --output=jsonpath='{.status.phase}' 2>/dev/null || echo "NotFound")
 
       if [[ "$POD_STATUS" == "Running" ]]; then
-        logSuccess "Vault pod is running."
-        return 0
+        logSuccess "Vault pod $pod is running."
       elif [[ "$POD_STATUS" == "NotFound" ]]; then
-        logWarning "Vault pod $VAULT_POD does not exist. Proceeding to deploy one..."
-        return 1
+        logWarning "Vault pod $pod not found. It may still be initializing."
+        all_running=false
       else
-        logWarning "Vault pod is not running yet. Current status: $POD_STATUS. Retrying ($i/$MAX_RETRIES)..."
+        logWarning "Vault pod $pod is not running yet. Current status: $POD_STATUS."
+        all_running=false
       fi
-
-      sleep "$RETRY_DELAY"
     done
 
-    logWarning "Vault pod is still not running after $MAX_RETRIES attempts. Deleting the faulty pod before proceeding to deploy a new one..."
-    sleep 1
-    clean_up_vault
-    return 1
-  }
-
-  # Function to store cryptographic materials
-  store_certificate() {
-    local path=$1
-    local cert_path=$2
-    local key_path=$3
-    local chain_path=${4:-}
-
-    log "Storing certificates for $path..."
-    sleep 1
-    echo
-
-    if [[ ! -f "$cert_path" ]] || [[ ! -f "$key_path" ]]; then
-      exit_on_error "Certificate or key file not found for $path."
+    if $all_running; then
+      logSuccess "All Vault pods are running."
+      return 0
+    else
+      logWarning "Not all Vault pods are running. Retrying ($i/$MAX_RETRIES)..."
+      sleep "$RETRY_DELAY"
     fi
+  done
 
-    local vault_cmd="vault kv put \"$path\" cert=\"\$(cat \"$cert_path\")\" key=\"\$(cat \"$key_path\")\""
+  logWarning "Some Vault pods are still not running after $MAX_RETRIES attempts. Deleting faulty pods before proceeding..."
+  sleep 1
+  clean_up_vault
+  exit 1
+}
 
-    if [[ -n "$chain_path" && -f "$chain_path" ]]; then
-      vault_cmd+=" chain=\"\$(cat \"$chain_path\")\""
-    fi
-
-    if [[ -z VAULT-0 ]] || [[ -z "$NAMESPACE" ]]; then
-      exit_on_error "VAULT_POD or NAMESPACE is not set. Cannot execute kubectl command."
-    fi
-
-    log "Executing: $vault_cmd in pod $VAULT_POD in namespace $NAMESPACE ..."
-    kubectl exec -it VAULT-0 -n "$NAMESPACE" -- bash -c "$vault_cmd" || exit_on_error "Failed to store certificates for $path."
-  }
-
-  # Function to join vault pods to raft
-  join_pod_to_raft_cluster() {
-    local pod_name=$1
-
-    log "Joining pod $pod_name to raft cluster..."
-    sleep 3
-    if ! kubectl exec -it $pod_name -- vault operator raft join http://vault-0.vault-internal:8200
-      logError "Failed to join $pod_name to raft cluster."
+# Fnction to unseal vault pods
+unseal_vault() {
+  local pod_name="$1"
+  log "Unsealing $pod_name..."
+  sleep 3
+  for i in {1..3}; do
+    # Decrypt the unseal key
+    KEY=$(gpg --decrypt ../Vault/vault-cred/unseal-keys.gpg | sed -n "${i}p")
+    if [[ $? -ne 0 ]]; then
+      logError "Failed to decrypt unseal key $i for $pod_name. Cleaning up..."
       sleep 1
       clean_up_vault
       exit 1
-    else
-      logSuccess "$pod_name successfully joined the raft cluster"
-  }
+    fi
 
-  # Fnction to unseal vault pods
-  unseal_vault() {
-    local pod_name="$1"
-    log "Unsealing $pod_name..."
-    sleep 3
-    for i in {1..3}; do
-      # Decrypt the unseal key
-      KEY=$(gpg --decrypt ../vault-cred/unseal-keys.gpg | sed -n "${i}p")
-      if [[ $? -ne 0 ]]; then
-        logError "Failed to decrypt unseal key $i for $pod_name. Cleaning up..."
-        sleep 1
-        clean_up_vault
-        exit 1
-      fi
+    # Unseal the vault pod
+    kubectl exec $pod_name -n "$NAMESPACE" -- vault operator unseal "$KEY"
+    if [[ $? -ne 0 ]]; then
+      logError "Failed to unseal $pod_name with key $i. Cleaning up..."
+      sleep 1
+      clean_up_vault
+      exit 1
+    fi
+  done
+  logSuccess "$pod_name successfully unsealed"
+}
 
-      # Unseal the vault pod
-      kubectl exec -it $pod_name -n "$NAMESPACE" -- vault operator unseal "$KEY"
-      if [[ $? -ne 0 ]]; then
-        logError "Failed to unseal $pod_name with key $i. Cleaning up..."
-        sleep 1
-        clean_up_vault
-        exit 1
-      fi
-    done
-    logSuccess "$pod_name successfully unsealed"
-  }
+# Function to join vault pods to raft
+join_pod_to_raft_cluster() {
+  local pod_name=$1
+
+  # Retrieve the leader's API address dynamically
+  set +e
+  leader_address=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault status -format=json | jq -r '.leader_address')
+  set -e
+  if [ -z "$leader_address" ]; then
+    logError "Failed to retrieve leader address."
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+
+  log "Joining pod $pod_name to raft cluster..."
+  sleep 3
+  if ! kubectl exec $pod_name -- vault operator raft join "$leader_address"; then
+    logError "Failed to join $pod_name to raft cluster."
+    sleep 1
+    clean_up_vault
+    exit 1
+  else
+    logSuccess "$pod_name successfully joined the raft cluster"
+  fi
+  sleep 1
+
+  unseal_vault "$pod_name"
+}
+
+# Configure Vault Kubernetes Auth Method and Roles
+configure_vault_kubernetes_auth() {
+  log "Configuring Vault to use Kubernetes authentication..."
+  sleep 2
+
+  # Enable Kubernetes Auth
+  if ! kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault auth enable kubernetes; then
+    logError "Failed to enable Kubernetes auth method in Vault."
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "Kubernetes auth method enabled successfully."
+
+  # Configure Kubernetes Auth
+  if ! kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault write auth/kubernetes/config \
+      kubernetes_host="$KUBERNETES_HOST" \
+      token_reviewer_jwt="$TOKEN_REVIEWER_JWT" \
+      kubernetes_ca_cert="$KUBERNETES_CA_CERT" \
+      issuer="$ISSUER"; then
+    logError "Failed to configure Kubernetes auth method in Vault."
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "Vault Kubernetes authentication configured successfully."
+
+  # Configure Kubernetes Auth Role
+  log "Configuring Kubernetes authentication roles in Vault..."
+  sleep 2
+
+  ROLE_NAME="vault-app"
+  BOUND_SERVICE_ACCOUNT="vault-auth"
+  NAMESPACE_TO_BIND="default"
+  POLICIES="default,read-secrets"
+  TTL="1h"
+
+  if ! kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault write auth/kubernetes/role/$ROLE_NAME \
+      bound_service_account_names="$BOUND_SERVICE_ACCOUNT" \
+      bound_service_account_namespaces="$NAMESPACE_TO_BIND" \
+      policies="$POLICIES" \
+      ttl="$TTL"; then
+    logError "Failed to configure Kubernetes auth role '$ROLE_NAME' in Vault."
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+
+  logSuccess "Vault Kubernetes authentication role '$ROLE_NAME' configured successfully."
+}
 
 main() {
   # Exit immediately if a command exits with a non-zero status
   # Ensure that the entire pipe fails if any command fails
-  set -e
+  set -eE
+  trap 'logError "Error: Command \"$BASH_COMMAND\" failed with exit code $?;"' ERR
   set -o pipefail
+
+  # Error Log Redirection
+  exec 2>>/tmp/vault-error.log
 
   # Set default values or override from environment variables or command-line args
   NAMESPACE="${NAMESPACE:-vault}"
-  MAX_RETRIES=30
+  VAULT_POD="vault-0"
+  MAX_RETRIES=50
   RETRY_DELAY=10
 
   # Load the configuration file
-  log "Loading configuration file..."
+  log "Loading configuration files..."
   sleep 1
   if [ -f ./.env ]; then
     source ./.env
@@ -462,6 +524,8 @@ main() {
     sleep 0.8
     echo "NAMESPACE=${NAMESPACE}"
     sleep 0.8
+    echo "VAULT_POD=${VAULT_POD}"
+    sleep 0.8
     echo
   else
     logError "Configuration file .env not found."
@@ -471,14 +535,9 @@ main() {
   # Check if required environment variables are set
   validate_env_vars
 
-  # Error Log Redirection
-  exec 2>>/tmp/vault-error.log
-
   # Ensure that the Vault pod is running
-  log "Checking if the Vault pod $VAULT_POD is running..."
+  log "Checking if the Vault pods are running..."
   sleep 3
-
-  check_vault_pod_status
 
   # Initial check for Vault pod
   if ! check_vault_pod_status; then
@@ -517,31 +576,42 @@ main() {
       fi
     fi
 
-    # Deploy or upgrade Vault
+    # Deploy or upgrade Vault with HA and integrated Raft storage (3 nodes)
     if helm list -n "$NAMESPACE" | grep -q '^vault'; then
       log "Vault release exists. Attempting to upgrade..."
       sleep 3
       echo
-      if ! helm upgrade vault hashicorp/vault --namespace "$NAMESPACE" --set "server.dev.enabled=true"; then
-        logWarning "Failed to upgrade Vault release. Deleting and redeploying..."
+      if ! error_message=$(helm upgrade vault hashicorp/vault \
+          --namespace "$NAMESPACE" \
+          --dry-run --debug \
+          --values helm-vault-raft-values.yaml 2>&1); then
+        logWarning "Failed to upgrade Vault release - $error_message. Deleting and redeploying..."
         sleep 3
         if ! helm uninstall vault --namespace "$NAMESPACE"; then
           logError "Failed to delete Vault release. Kindly investigate. Exiting..."
           sleep 1
           exit 1
         fi
-        if ! helm install vault hashicorp/vault --namespace "$NAMESPACE" --create-namespace --values helm-vault-raft-values.yaml; then
+        if ! helm install vault hashicorp/vault \
+            --namespace "$NAMESPACE" \
+            --create-namespace \
+            --values helm-vault-raft-values.yaml; then
           logError "Failed to deploy Vault using Helm. Exiting..."
           sleep 1
           exit 1
         fi
+      else
+        logSuccess "Vault release upgraded successfully."
       fi
     else
       echo
       log "Deploying Vault using Helm..."
       sleep 3
       echo
-      if ! error_message=$(helm install vault hashicorp/vault --namespace "$NAMESPACE" --create-namespace --values helm-vault-raft-values.yaml 2>&1); then
+      if ! error_message=$(helm install vault hashicorp/vault \
+          --namespace "$NAMESPACE" \
+          --create-namespace \
+          --values ../Vault/Raft-config/helm-vault-raft-values.yaml 2>&1); then
         logError "Failed to deploy Vault using Helm. Error: $error_message"
         sleep 1
         exit 1
@@ -551,18 +621,29 @@ main() {
     # Recheck Vault pod status
     log "Rechecking Vault pod status after deployment..."
     sleep 3
-    if ! check_vault_pod_status; then
-      logError "Vault pod is still not running after deployment and retries. Cleaning up..."
-      sleep 1
-      clean_up_vault
-      exit 1
-    fi
+    while ! check_vault_pod_status; do
+      sleep 3
+    done
   fi
+
+  pods=($(kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=vault --output=jsonpath='{.items[*].metadata.name}'))
+  vault_pod0=${pods[0]}
+  vault_pod1=${pods[1]}
+  vault_pod2=${pods[2]}
+
+  log $vault_pod0
+  log $vault_pod1
+  log $vault_pod2
+  echo
+  read
 
   # Initialize Vault if not already initialized
   log "Checking if Vault is already initialized..."
   sleep 3
-  VAULT_STATUS=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault status -format=json | jq -r '.initialized')
+  # Capture and print the output and errors of the kubectl exec command
+  set +e
+  VAULT_STATUS=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault status -format=json 2>/dev/null | jq -r '.initialized')
+  set -e
 
   if [[ "$VAULT_STATUS" == "true" ]]; then
     log "Vault is already initialized."
@@ -571,14 +652,16 @@ main() {
     sleep 3
 
     # Try to initialize Vault and handle possible errors
-    if kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault operator init -format=json > /tmp/vault-init.json; then
+    if kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault operator init -format=json > /tmp/vault-init.json; then
       logSuccess "Vault initialization succeeded."
     else
       logWarning "A problem occurred during initialization of Vault. Checking if Vault was initialized despite the error..."
       sleep 3
 
       # Check if Vault is initialized despite the error
-      VAULT_STATUS=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault status -format=json | jq -r '.initialized')
+      set +e
+      VAULT_STATUS=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault status -format=json | jq -r '.initialized')
+      set -e
       if [[ "$VAULT_STATUS" == "true" ]]; then
         logError "Vault initialization was successful but writing to temp file failed. Resulting to cleaning up..."
         sleep 1
@@ -587,7 +670,7 @@ main() {
       else
         log "Vault is not initialized. Retrying initialization..."
         sleep 3
-        if ! kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault operator init -format=json > /tmp/vault-init.json; then
+        if ! kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault operator init -format=json > /tmp/vault-init.json; then
           logError "Vault initialization failed after retry."
           sleep 1
           clean_up_vault
@@ -599,10 +682,11 @@ main() {
 
   # Check if the vault-init.json file exists before proceeding
   if [[ -f /tmp/vault-init.json ]]; then
+    cat /tmp/vault-init.json
     log "Encrypting unseal keys..."
     sleep 3
-    jq -r '.unseal_keys_b64[]' /tmp/vault-init.json | gpg --symmetric --cipher-algo AES256 -o ../vault-cred/unseal-keys.gpg || logError "Failed to encrypt unseal keys."
-    jq -r '.root_token' /tmp/vault-init.json | gpg --symmetric --cipher-algo AES256 -o ../vault-cred/root-token.gpg || logError "Failed to encrypt root token."
+    jq -r '.unseal_keys_b64[]' /tmp/vault-init.json | gpg --symmetric --cipher-algo AES256 -o ../Vault/vault-cred/unseal-keys.gpg || logError "Failed to encrypt unseal keys."
+    jq -r '.root_token' /tmp/vault-init.json | gpg --symmetric --cipher-algo AES256 -o ../Vault/vault-cred/root-token.gpg || logError "Failed to encrypt root token."
 
     # Clean up temporary files
     rm /tmp/vault-init.json
@@ -613,68 +697,153 @@ main() {
     exit 1
   fi
 
-  # Unseal Vault 0
-  unseal_vault "vault-0"
-
   # Joining other pods to Raft cluster
-  join_pod_to_raft_cluster "vault-1"
-  join_pod_to_raft_cluster "vault-2"
+  join_pod_to_raft_cluster "$vault_pod0"
+  join_pod_to_raft_cluster "$vault_pod1"
+  join_pod_to_raft_cluster "$vault_pod2"
 
-  # Unsealing Vault 1 and 2
-  unseal_vault "vault-1"
-  unseal_vault "vault-2"
+  read
 
-  log "Decrypting root token..."
-  sleep 3
-  root_token=(gpg --decrypt ../vault-cred/root-token.gpg)
-  if [[ $? ne 0]]; then
-    logError "Failed to log in to Vault-o with root token. Cleaning up"
-    sleep 1
-    clean_up_vault
-    exit 1
-  fi
+  # Retrieve Kubernetes authentication details
+  log "Retrieving Kubernetes authentication details..."
+  sleep 2
 
-  log "Logging in to Vault with decrypted root token..."
-  sleep 3
-  if ! kubectl exec -it vault-0 -n "$NAMESPACE" -- vault login  -no-print "$root_token"
-    logError "Failed to login to Vault-0 with decrypted root token"
-    sleep 1
-    clean_up_vault
-    exit 1
-  else
-    logSuccess "Successfully logged into Vault-0 with decrypted root token"
+  # Kubernetes host
+  KUBERNETES_HOST=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+  logSuccess "Kubernetes host: $KUBERNETES_HOST"
+
+  # Token reviewer JWT
+  TOKEN_REVIEWER_JWT=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+  logSuccess "Token reviewer JWT retrieved successfully."
+
+  # Kubernetes CA cert
+  KUBERNETES_CA_CERT=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 | tr -d '\n')
+  logSuccess "Kubernetes CA certificate retrieved and encoded in base64."
+
+  # Issuer
+  ISSUER=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- cat /var/run/secrets/kubernetes.io/serviceaccount/token | \
+    jq -R 'split(".") | .[1] | @base64d | fromjson.iss' 2>/dev/null || echo "https://kubernetes.default.svc.cluster.local")
+  logSuccess "Kubernetes issuer: $ISSUER"
+
+  configure_vault_kubernetes_auth
+
+  # log "Decrypting root token..."
+  # sleep 3
+  # root_token=(gpg --decrypt ../Vault/vault-cred/root-token.gpg)
+  # if [[ $? -ne 0 ]]; then
+  #   logError "Failed to log in to Vault-o with root token. Cleaning up"
+  #   sleep 1
+  #   clean_up_vault
+  #   exit 1
+  # fi
+
+  # log "Logging in to Vault with decrypted root token..."
+  # sleep 3
+  # if ! error_message=$(kubectl exec "$vault_pod0" -n "$NAMESPACE" -- vault login  -no-print "$root_token"); then
+  #   logError "Failed to login to Vault-0 with decrypted root token- $error_message"
+  #   sleep 1
+  #   clean_up_vault
+  #   exit 1
+  # else
+  #   logSuccess "Successfully logged into Vault-0 with decrypted root token"
+  # fi
 
   # Enable the KV secrets engine
   log "Enabling KV secrets engine..."
   sleep 3
-  if ! kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault secrets enable -path=pesachain kv-v2; then
-    logError "Failed to enable KV secrets engine."
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault secrets enable -path=pesachain_kv kv-v2); then
+    logError "Failed to enable KV secrets engine- $error_message"
     sleep 1
     clean_up_vault
     exit 1
   fi
-
   logSuccess "KV secrets engine successfully enabled"
 
-  # Store initial secrets
-  log "Storing CA admin's credentials..."
+  # Store Pesachain cert in KV engine
+  log "Storing Pesachain cert in KV engine..."
   sleep 3
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv put pesachain_kv/cert certificate=@../crypto-config/peerOrganizations/ca/pesachainCA.crt); then
+    logError "Failed to store Pesachain cert in KV engine- $error_message"
+      sleep 1
+      clean_up_vault
+      exit 1
+  fi
 
-  # Attempt to store CA admin's credentials
-  if ! kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv put pesachain/org.pesachain.com/user/admin_creds \
-    username="admin" \
-    password="$(openssl rand -hex 24)"; then
-    logError "Failed to store CA admin's credentials."
+  # Enable the PKI secrets engine
+  log "Enabling PKI secrets engine..."
+  sleep 3
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault secrets enable -path=pesachain_pki pki); then
+    logError "Failed to enable PKI secrets engine- $error_message"
     sleep 1
     clean_up_vault
     exit 1
   fi
+  logSuccess "PKI secrets engine successfully enabled"
+
+  log "Setting up pki engine..."
+  sleep 3
+
+  # Increasing the global TTL for the pki engine
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault secrets tune -max-lease-ttl=87648h pesachain_pki); then # TTL=10 years
+    logError "Failed to set max TTL for PKI engine- $error_message"
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "PKI global max TTL set to 10 years"
+
+  # Configuring Vault to trust pesachain certificate (intermediate cert)
+  # ...but first, retrieve PesachaCA cert from Pesachain's KV engine
+  if ! pesachainCACert_content=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault read -field=certificate pesachain_kv/cert); then
+    logError "Failed to retrieve Pesachain CA certificate from KV engine, cleaning up and exiting"
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+
+  # Trusting Pesachain certificate
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault write pesachain_pki/config/ca pem_bundle="$pesachainCACert_content"); then
+    logError "Failed to trust pesachain certificate- $error_message"
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "Configuring Pesachain CA trust successful."
+
+  # Configuring CRL location and issuing certificates
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault write pesachain_pki/config/urls \
+    issuing_certificates="http://127.0.0.1:8200/v1/pki/ca" \
+    crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"); then
+    logError "Failed to configure CRL location and issuing certificates."
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "Successfully configured CRL location and issuing certificates"
+
+  # Configuring roles
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault write pesachain_pki/roles/new_organizations \
+    allowed_domains="financial_institutions.com,payment_gateway.com" \
+    allow_subdomains=true \
+    allow_any_name=false \
+    server_flag=false \
+    client_flag=false \
+    max_ttl=8760h \
+    key_usage="DigitalSignature,KeyEncipherment,CertSign" \
+    organization="Pesachain_fabric"
+  ); then
+   logError "Failed to configure roles- $error_message"
+    sleep 1
+    clean_up_vault
+    exit 1
+  fi
+  logSuccess "Successfully configured roles"
 
   # Store Auth0 secrets
   log "Storing Auth0 secrets..."
   sleep 3
 
-  if ! error_message=$(kubectl exec -it VAULT-0 -n "$NAMESPACE" -- vault kv put pesachain/auth0 \
+  if ! error_message=$(kubectl exec "$VAULT_POD" -n "$NAMESPACE" -- vault kv put pesachain/auth0 \
       domain="${AUTH0_DOMAIN}" \
       client_id="${AUTH0_CLIENT_ID}" \
       client_secret="${AUTH0_CLIENT_SECRET}" \
@@ -683,36 +852,6 @@ main() {
   fi
 
   logSuccess "Successfully stored Auth0 secrets into Vault."
-
-  # Store certificates for OrdererOrg
-  store_certificate "pesachain/orderer.pesachain.com/ca" "../crypto-config/ordererOrganizations/orderer.pesachain.com/ca/ca.orderer.pesachain.com-cert.pem" "../crypto-config/ordererOrganizations/orderer.pesachain.com/ca/priv_sk" "../crypto-config/ordererOrganizations/orderer.pesachain.com/ca/ca.orderer.pesachain.com-ca-chaincert.pem"
-
-  # Store TLS certificates for OrdererOrg
-  store_certificate "pesachain/orderer.pesachain.com/tlsca" "../crypto-config/ordererOrganizations/orderer.pesachain.com/tlsca/tlsca.orderer.pesachain.com-cert.pem" "../crypto-config/ordererOrganizations/orderer.pesachain.com/tlsca/priv_sk"
-
-  # Store certificates for orderers (orderer0, orderer1, orderer2)
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/msp" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/msp/signcerts/orderer0.orderer.pesachain.com-cert.pem" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/msp/keystore/priv_sk" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/msp/cacerts/ca.orderer.pesachain.com-cert.pem"
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/msp" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/msp/signcerts/orderer1.orderer.pesachain.com-cert.pem" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/msp/keystore/priv_sk" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/msp/cacerts/ca.orderer.pesachain.com-cert.pem"
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/msp" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/msp/signcerts/orderer2.orderer.pesachain.com-cert.pem" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/msp/keystore/priv_sk" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/msp/cacerts/ca.orderer.pesachain.com-cert.pem"
-
-  # Store TLS certificates for each orderer (orderer0, orderer1, orderer2)
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls/server.crt" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls/server.key" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer0.orderer.pesachain.com/tls/ca.crt"
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls/server.crt" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls/server.key" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer1.orderer.pesachain.com/tls/ca.crt"
-  store_certificate "pesachain/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/server.crt" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/server.key" "../crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/ca.crt"
-
-  # Store certificates for PeerOrg
-  store_certificate "pesachain/peer.pesachain.com/ca" "../crypto-config/peerOrganizations/org.pesachain.com/ca/ca.org.pesachain.com-cert.pem" "../crypto-config/peerOrganizations/org.pesachain.com/ca/priv_sk" "../crypto-config/peerOrganizations/org.pesachain.com/ca/ca.org.pesachain.com-ca-chaincert.pem"
-
-  # Store TLS certificates for PeerOrg
-  store_certificate "pesachain/peer.pesachain.com/tlsca" "../crypto-config/peerOrganizations/org.pesachain.com/tlsca/tlsca.org.pesachain.com-cert.pem" "../crypto-config/peerOrganizations/org.pesachain.com/tlsca/priv_sk"
-
-  # Store certificates for peers (peer0, peer1)
-  store_certificate "pesachain/peer.pesachain.com/peers/peer0.peer.pesachain.com/msp" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/msp/signcerts/peer0.org.pesachain.com-cert.pem" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/msp/keystore/priv_sk" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/msp/cacerts/ca.org.pesachain.com-cert.pem"
-  store_certificate "pesachain/peer.pesachain.com/peers/peer1.peer.pesachain.com/msp" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/msp/signcerts/peer1.org.pesachain.com-cert.pem" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/msp/keystore/priv_sk" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/msp/cacerts/ca.org.pesachain.com-cert.pem"
-
-  # Store TLS certificates for each peer (peer0, peer1)
-  store_certificate "pesachain/peer.pesachain.com/peers/peer0.peer.pesachain.com/tls" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/tls/server.crt" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/tls/server.key" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer0.org.pesachain.com/tls/ca.crt"
-  store_certificate "pesachain/peer.pesachain.com/peers/peer1.peer.pesachain.com/tls" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/tls/server.crt" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/tls/server.key" "../crypto-config/peerOrganizations/org.pesachain.com/peers/peer1.org.pesachain.com/tls/ca.crt"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

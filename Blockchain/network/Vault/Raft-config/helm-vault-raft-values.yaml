@@ -1,0 +1,53 @@
+server:
+  ha:
+    enabled: true
+    replicas: 3
+    raft:
+      enabled: true
+      setNodeId: true
+      config: |
+        cluster_name = "vault-integrated-storage"
+        storage "raft" {
+          # Use the pod's HOSTNAME environment variable to generate a unique node_id.
+          node_id = "$(HOSTNAME)"
+          path    = "/vault/data/"
+        }
+        listener "tcp" {
+          address          = "[::]:8200"
+          cluster_address  = "[::]:8201"
+          tls_disable      = "true"
+        }
+        # For cluster communication, assume DNS names like vault-0, vault-1, vault-2.
+        api_addr     = "https://$(HOSTNAME).vault.svc.cluster.local:8200"
+        cluster_addr = "https://$(HOSTNAME).vault.svc.cluster.local:8201"
+        ui           = true
+        disable_mlock = true
+
+  # Pod anti-affinity to ensure each Vault pod is scheduled on a different node.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+          topologyKey: kubernetes.io/hostname
+
+  # Adjust ownership of mounted directory using an init container
+  extraInitContainers:
+    - name: fix-volume-permissions
+      image: busybox
+      command: ['sh', '-c', 'chown -R 100:100 /vault/data']
+      volumeMounts:
+        - name: data
+          mountPath: /vault/data
+
+  securityContext:
+    # Run Vault processes as user ID 100 and set the group ownership of mounted volumes to GID 100
+    # to ensure proper file permissions for writing to persistent storage.
+    runAsUser: 100
+    fsGroup: 100
+
+  # Optionally, consider removing or adjusting SKIP_CHOWN if it's set elsewhere.
+  env:
+    - name: SKIP_CHOWN
+      value: "false"

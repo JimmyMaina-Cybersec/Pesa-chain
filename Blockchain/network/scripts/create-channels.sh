@@ -1,5 +1,5 @@
 #!/bin/bash
-
+source init-vault.sh
 # Create channels
 log "Creating channels..."
 peer channel create -o orderer.pesachain.com:7050 -c bankinstitutionchannel -f ./channel-artifacts/bankinstitutionchannel.tx --outputBlock ./channel-artifacts/bankinstitutionchannel.block
