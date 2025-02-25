@@ -113,7 +113,6 @@ services:
     volumes:
       - ./Vault/vault-node1-data:/vault/file
       - ./Vault/vault-node1-config:/vault/config
-      - ./Blockchain/network/crypto-config/peerOrganizations/org.pesachain.com/ca/:/vault/ca
     environment:
       - VAULT_ADDR=http://127.0.0.1:8200
       - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node1"}},"ui":true,"api_addr":"http://vault-node1:8200","cluster_addr":"http://vault-node1:8201"}
@@ -131,7 +130,6 @@ services:
     volumes:
       - ./Vault/vault-node2-data:/vault/file
       - ./Vault/vault-node2-config:/vault/config
-      - ./Blockchain/network/crypto-config/peerOrganizations/org.pesachain.com/ca/:/vault/ca
     environment:
       - VAULT_ADDR=http://127.0.0.1:8200
       - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node2"}},"ui":true,"api_addr":"http://vault-node2:8200","cluster_addr":"http://vault-node2:8201","telemetry":{"prometheus_retention_time":"24h","disable_hostname":true}}
@@ -149,7 +147,6 @@ services:
       volumes:
         - ./Vault/vault-node3-data:/vault/file
         - ./Vault/vault-node3-config:/vault/config
-        - ./Blockchain/network/crypto-config/peerOrganizations/org.pesachain.com/ca/:/vault/ca
       environment:
         - VAULT_ADDR=http://127.0.0.1:8200
         - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node3"}},"ui":true,"api_addr":"http://vault-node3:8200","cluster_addr":"http://vault-node3:8201"}
