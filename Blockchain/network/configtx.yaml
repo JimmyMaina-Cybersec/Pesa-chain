@@ -77,7 +77,7 @@ Orderer: &OrdererDefaults
         ServerTLSCert: crypto-config/ordererOrganizations/orderer.pesachain.com/orderers/orderer2.orderer.pesachain.com/tls/server.crt
   BatchTimeout: 2s
   BatchSize:
-    MaxMessageCount: 500
+    MaxMessageCount: 50
     AbsoluteMaxBytes: 98 MB
     PreferredMaxBytes: 2 MB
   Organizations:
@@ -129,8 +129,8 @@ Profiles:
           - *OrdererOrg
           - *Pesachain
 
-  BankInstitutionChannel:
-    Consortium: BankInstitution
+  PaymentsChannel:
+    Consortium: Payments
     <<: *ChannelDefaults
     Application:
       <<: *ApplicationDefaults
@@ -139,23 +139,113 @@ Profiles:
       Capabilities:
         <<: *ApplicationCapabilities
 
-  PaymentGatewaysChannel:
-    Consortium: PaymentGateways
-    <<: *ChannelDefaults
-    Application:
-      <<: *ApplicationDefaults
-      Organizations:
-        - *Pesachain
-      Capabilities:
-        <<: *ApplicationCapabilities
+  LendingAndCreditChannel:
+      Consortium: LendingAndCredit
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
 
-  ComplianceEntitiesChannel:
-    Consortium: ComplianceEntities
-    <<: *ChannelDefaults
-    Application:
-      <<: *ApplicationDefaults
-      Organizations:
-        - *OrdererOrg
-        - *Pesachain
-      Capabilities:
-        <<: *ApplicationCapabilities
+  TradeFinanceAndForeignExchangeChannel:
+      Consortium: TradeFinanceAndForeignExchange
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  SecuritiesAndInvestmentsChannel:
+      Consortium: SecuritiesAndInvestments
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  AssetAndWealthManagementChannel:
+      Consortium: AssetAndWealthManagement
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  TreasuryAndLiquidityManagementChannel:
+      Consortium: TreasuryAndLiquidityManagement
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  ClearingAndSettlementChannel:
+      Consortium: ClearingAndSettlement
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  RegulatoryComplianceAndReportingChannel:
+      Consortium: RegulatoryComplianceAndReporting
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *OrdererOrg
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  DigitalAssetsAndCryptocurrencyChannel:
+      Consortium: DigitalAssetsAndCryptocurrency
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  InsuranceAndRiskManagementChannel:
+      Consortium: InsuranceAndRiskManagement
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  MicrofinanceAndFinancialInclusionChannel:
+      Consortium: MicrofinanceAndFinancialInclusion
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
+
+  SupportServicesAndInfrastructureChannel:
+      Consortium: SupportServicesAndInfrastructure
+      <<: *ChannelDefaults
+      Application:
+        <<: *ApplicationDefaults
+        Organizations:
+          - *Pesachain
+        Capabilities:
+          <<: *ApplicationCapabilities
