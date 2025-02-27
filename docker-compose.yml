@@ -32,7 +32,7 @@ services:
   #     watch:
   #       - path: ./Backend/package.json
   #         action: rebuild
-  #       - path: ./Backend/package-lock.jsin
+  #       - path: ./Backend/package-lock.json
   #         action: rebuild
   #       - path: ./Backend
   #         target: /app
@@ -58,7 +58,7 @@ services:
   #     watch:
   #       - path: ./Frontend/mobile/package.json
   #         action: rebuild
-  #       - path: ./Frontend/mobile/package-lock.jsin
+  #       - path: ./Frontend/mobile/package-lockojsin
   #         action: rebuild
   #       - path: ./Frontend/mobile
   #         target: /app
@@ -89,7 +89,7 @@ services:
   #     watch:
   #       - path: ./Frontend/web/package.json
   #         action: rebuild
-  #       - path: ./Frontend/web/package-lock.jsin
+  #       - path: ./Frontend/web/package-lock.json
   #         action: rebuild
   #       - path: ./Frontend/web
   #         target: /app
@@ -114,9 +114,14 @@ services:
       - ./Vault/vault-node1-data:/vault/file
       - ./Vault/vault-node1-config:/vault/config
     environment:
-      - VAULT_ADDR=http://127.0.0.1:8200
+      - VAULT_ADDR=http://vault-node1:8200
       - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node1"}},"ui":true,"api_addr":"http://vault-node1:8200","cluster_addr":"http://vault-node1:8201"}
     command: "vault server -config=/vault/config/local.json"
+    healthcheck:
+        test: ["CMD", "vault", "status"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
     networks:
       - app-network
 
@@ -131,9 +136,14 @@ services:
       - ./Vault/vault-node2-data:/vault/file
       - ./Vault/vault-node2-config:/vault/config
     environment:
-      - VAULT_ADDR=http://127.0.0.1:8200
+      - VAULT_ADDR=http://vault-node2:8200
       - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node2"}},"ui":true,"api_addr":"http://vault-node2:8200","cluster_addr":"http://vault-node2:8201","telemetry":{"prometheus_retention_time":"24h","disable_hostname":true}}
     command: "vault server -config=/vault/config/local.json"
+    healthcheck:
+        test: ["CMD", "vault", "status"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
     networks:
       - app-network
 
@@ -148,12 +158,43 @@ services:
         - ./Vault/vault-node3-data:/vault/file
         - ./Vault/vault-node3-config:/vault/config
       environment:
-        - VAULT_ADDR=http://127.0.0.1:8200
+        - VAULT_ADDR=http://vault-node3:8200
         - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node3"}},"ui":true,"api_addr":"http://vault-node3:8200","cluster_addr":"http://vault-node3:8201"}
       command: "vault server -config=/vault/config/local.json"
+      healthcheck:
+        test: ["CMD", "vault", "status"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
       networks:
         - app-network
 
+  ca.pesachain.com:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca.pesachain.com
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.pesachain.com
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./Blockchain/network/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+      - ./Blockchain/network/crypto-material:/etc/hyperledger/fabric-ca-server/msp
+    networks:
+        - app-network
+
+  ca-client:
+    image: hyperledger/fabric-ca:1.5
+    container_name: fabric-ca-client
+    networks:
+      - app-network
+    depends_on:
+      - ca.pesachain.com
+    volumes:
+      - ./Blockchain/network/crypto-material:/etc/hyperledger/fabric-ca-client
+      - ./Blockchain/network/crypto-config:/etc/hyperledger/fabric-ca-client
 networks:
   app-network:
     driver: bridge
