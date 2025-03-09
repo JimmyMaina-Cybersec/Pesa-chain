@@ -103,71 +103,74 @@ services:
   #     retries: 3
   #     start_period: 5s
 
-  vault-node1:
-    image: hashicorp/vault:latest
-    container_name: vault-node1
-    cap_add:
-      - IPC_LOCK
-    ports:
-      - "8200:8200"
-    volumes:
-      - ./Vault/vault-node1-data:/vault/file
-      - ./Vault/vault-node1-config:/vault/config
-    environment:
-      - VAULT_ADDR=http://vault-node1:8200
-      - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node1"}},"ui":true,"api_addr":"http://vault-node1:8200","cluster_addr":"http://vault-node1:8201"}
-    command: "vault server -config=/vault/config/local.json"
-    healthcheck:
-        test: ["CMD", "vault", "status"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-    networks:
-      - app-network
+  # vault-node1:
+  #   image: hashicorp/vault:latest
+  #   container_name: vault-node1
+  #   user: "10000:10000"
+  #   cap_add:
+  #     - IPC_LOCK
+  #   ports:
+  #     - "8200:8200"
+  #   volumes:
+  #     - ./Vault/vault-node1-data:/vault/file
+  #     - ./Vault/vault-node1-config:/vault/config
+  #   environment:
+  #     - VAULT_ADDR=http://vault-node1:8200
+  #     - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node1"}},"ui":true,"api_addr":"http://vault-node1:8200","cluster_addr":"http://vault-node1:8201"}
+  #   command: "vault server -config=/vault/config/local.json"
+  #   healthcheck:
+  #       test: ["CMD", "vault", "status"]
+  #       interval: 10s
+  #       timeout: 5s
+  #       retries: 5
+  #   networks:
+  #     - app-network
 
-  vault-node2:
-    image: hashicorp/vault:latest
-    container_name: vault-node2
-    cap_add:
-      - IPC_LOCK
-    ports:
-      - "8202:8200"
-    volumes:
-      - ./Vault/vault-node2-data:/vault/file
-      - ./Vault/vault-node2-config:/vault/config
-    environment:
-      - VAULT_ADDR=http://vault-node2:8200
-      - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node2"}},"ui":true,"api_addr":"http://vault-node2:8200","cluster_addr":"http://vault-node2:8201","telemetry":{"prometheus_retention_time":"24h","disable_hostname":true}}
-    command: "vault server -config=/vault/config/local.json"
-    healthcheck:
-        test: ["CMD", "vault", "status"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-    networks:
-      - app-network
+  # vault-node2:
+  #   image: hashicorp/vault:latest
+  #   container_name: vault-node2
+  #   user: "10000:10000"
+  #   cap_add:
+  #     - IPC_LOCK
+  #   ports:
+  #     - "8202:8200"
+  #   volumes:
+  #     - ./Vault/vault-node2-data:/vault/file
+  #     - ./Vault/vault-node2-config:/vault/config
+  #   environment:
+  #     - VAULT_ADDR=http://vault-node2:8200
+  #     - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node2"}},"ui":true,"api_addr":"http://vault-node2:8200","cluster_addr":"http://vault-node2:8201","telemetry":{"prometheus_retention_time":"24h","disable_hostname":true}}
+  #   command: "vault server -config=/vault/config/local.json"
+  #   healthcheck:
+  #       test: ["CMD", "vault", "status"]
+  #       interval: 10s
+  #       timeout: 5s
+  #       retries: 5
+  #   networks:
+  #     - app-network
 
-  vault-node3:
-      image: hashicorp/vault:latest
-      container_name: vault-node3
-      cap_add:
-        - IPC_LOCK
-      ports:
-        - "8203:8200"
-      volumes:
-        - ./Vault/vault-node3-data:/vault/file
-        - ./Vault/vault-node3-config:/vault/config
-      environment:
-        - VAULT_ADDR=http://vault-node3:8200
-        - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node3"}},"ui":true,"api_addr":"http://vault-node3:8200","cluster_addr":"http://vault-node3:8201"}
-      command: "vault server -config=/vault/config/local.json"
-      healthcheck:
-        test: ["CMD", "vault", "status"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-      networks:
-        - app-network
+  # vault-node3:
+  #     image: hashicorp/vault:latest
+  #     container_name: vault-node3
+  #     user: "10000:10000"
+  #     cap_add:
+  #       - IPC_LOCK
+  #     ports:
+  #       - "8203:8200"
+  #     volumes:
+  #       - ./Vault/vault-node3-data:/vault/file
+  #       - ./Vault/vault-node3-config:/vault/config
+  #     environment:
+  #       - VAULT_ADDR=http://vault-node3:8200
+  #       - VAULT_LOCAL_CONFIG={"listener":[{"tcp":{"address":"0.0.0.0:8200","tls_disable":true}}],"storage":{"raft":{"path":"/vault/file","node_id":"node3"}},"ui":true,"api_addr":"http://vault-node3:8200","cluster_addr":"http://vault-node3:8201"}
+  #     command: "vault server -config=/vault/config/local.json"
+  #     healthcheck:
+  #       test: ["CMD", "vault", "status"]
+  #       interval: 10s
+  #       timeout: 5s
+  #       retries: 5
+  #     networks:
+  #       - app-network
 
   ca.pesachain.com:
     image: hyperledger/fabric-ca:1.5
@@ -176,25 +179,119 @@ services:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca.pesachain.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
     ports:
       - "7054:7054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ./Blockchain/network/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
-      - ./Blockchain/network/crypto-material:/etc/hyperledger/fabric-ca-server/msp
+      - PesachainOrg_crypto:/etc/hyperledger/fabric-ca-server
     networks:
         - app-network
 
+  peer0.pesachain.com:
+    image: hyperledger/fabric-peer:2.2
+    container_name: peer0.pesachain.com
+    environment:
+      - CORE_PEER_ID=peer0.pesachain.com
+      - CORE_PEER_ADDRESS=peer0.pesachain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.pesachain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.pesachain.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.pesachain.com:7051
+      - CORE_PEER_LOCALMSPID=PesaChainMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer0.pesachain.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer0.pesachain.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer0.pesachain.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer0.pesachain.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric/peer0.pesachain.com
+      - CORE_PEER_TLS_ENABLED=true
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+    volumes:
+      - Peer0_crypto:/etc/hyperledger/fabric
+    networks:
+      - app-network
+
+  peer1.pesachain.com:
+    image: hyperledger/fabric-peer:2.2
+    container_name: peer1.pesachain.com
+    environment:
+      - CORE_PEER_ID=peer1.pesachain.com
+      - CORE_PEER_ADDRESS=peer1.pesachain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.pesachain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.pesachain.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.pesachain.com:7051
+      - CORE_PEER_LOCALMSPID=PesaChainMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer1.pesachain.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer1.pesachain.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer1.pesachain.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer1.pesachain.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric/peer1.pesachain.com
+      - CORE_PEER_TLS_ENABLED=true
+    ports:
+      - "8051:7051"
+      - "8052:7052"
+    volumes:
+      - Peer1_crypto:/etc/hyperledger/fabric
+    networks:
+      - app-network
+
+  peer2.pesachain.com:
+    image: hyperledger/fabric-peer:2.2
+    container_name: peer2.pesachain.com
+    environment:
+      - CORE_PEER_ID=peer2.pesachain.com
+      - CORE_PEER_ADDRESS=peer2.pesachain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer2.pesachain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.pesachain.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.pesachain.com:7051
+      - CORE_PEER_LOCALMSPID=PesaChainMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer2.pesachain.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer2.pesachain.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer2.pesachain.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer2.pesachain.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric/peer2.pesachain.com
+      - CORE_PEER_TLS_ENABLED=true
+    ports:
+      - "9051:7051"
+      - "9052:7052"
+    volumes:
+      - Peer2_crypto:/etc/hyperledger/fabric
+    networks:
+      - app-network
+
   ca-client:
     image: hyperledger/fabric-ca:1.5
-    container_name: fabric-ca-client
+    container_name: ca-client
+    environment:
+      - FABRIC_CA_CLIENT_HOME=/etc/hyperledger/fabric-ca-server/organizations/peerOrganizations/pesachain.com
     networks:
       - app-network
     depends_on:
       - ca.pesachain.com
     volumes:
-      - ./Blockchain/network/crypto-material:/etc/hyperledger/fabric-ca-client
-      - ./Blockchain/network/crypto-config:/etc/hyperledger/fabric-ca-client
+      - ca_client:/etc/hyperledger/fabric-ca-server
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  PesachainOrg_crypto:
+    external: true
+  Peer0_crypto:
+    external: true
+  Peer1_crypto:
+    external: true
+  Peer2_crypto:
+    external: true
+  ca_client:
+    external: true
+
