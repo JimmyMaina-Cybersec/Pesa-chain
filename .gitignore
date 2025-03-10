@@ -71,3 +71,7 @@ android/local.properties
 *.dylib
 *.out
 vendor/
+
+# Hashicorp Vault
+raft/
+vault.db

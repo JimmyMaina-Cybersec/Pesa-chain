@@ -25,8 +25,8 @@ FROM base AS final
 EXPOSE 3000
 
 # Health check for both dev and prod
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl --fail http://localhost:3000/health || exit 1
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#   CMD curl --fail http://localhost:3000/health || exit 1
 
 # Add a non-root user and switch to it for security
 RUN adduser -D appuser
