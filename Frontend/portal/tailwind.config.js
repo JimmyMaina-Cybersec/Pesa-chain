@@ -1,3 +1,5 @@
+import { fontFamily } from 'tailwindcss/defaultTheme'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -6,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter var', ...fontFamily.sans],
+      },
       colors: {
         primary: {
           50: '#f0f9ff',
@@ -18,8 +23,8 @@ export default {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],

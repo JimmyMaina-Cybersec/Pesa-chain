@@ -1,53 +1,33 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { authGuard } from '@auth0/auth0-vue'
+import Dashboard from '../views/Dashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: '/',
-      redirect: '/dashboard'
+      name: 'Dashboard',
+      component: Dashboard
     },
     {
-      path: '/dashboard',
-      component: () => import('../views/DashboardView.vue'),
-      beforeEnter: authGuard,
-      children: [
-        {
-          path: '',
-          name: 'dashboard',
-          component: () => import('../views/dashboard/OverviewPanel.vue')
-        },
-        {
-          path: 'transactions',
-          name: 'transactions',
-          component: () => import('../views/dashboard/TransactionsPanel.vue')
-        },
-        {
-          path: 'kyc',
-          name: 'kyc',
-          component: () => import('../views/dashboard/KYCPanel.vue')
-        },
-        {
-          path: 'analytics',
-          name: 'analytics',
-          component: () => import('../views/dashboard/AnalyticsPanel.vue')
-        },
-        {
-          path: 'audit',
-          name: 'audit',
-          component: () => import('../views/dashboard/AuditPanel.vue')
-        }
-      ]
+      path: '/transactions',
+      name: 'Transactions',
+      component: () => import('../views/Transactions.vue')
     },
     {
-      path: '/callback',
-      component: () => import('../views/CallbackView.vue')
+      path: '/kyc',
+      name: 'KYC',
+      component: () => import('../views/KYC.vue')
     },
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('../views/LoginView.vue')
+      path: '/organizations',
+      name: 'Organizations',
+      component: () => import('../views/Organizations.vue')
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: () => import('../views/Settings.vue')
     }
   ]
 })
