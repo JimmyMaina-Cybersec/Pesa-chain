@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     host: true, // listen on all network interfaces
-    allowedHosts: ['6d06-196-200-33-84.ngrok-free.app'] // allow your ngrok host
+    allowedHosts: ['2b88-41-215-37-30.ngrok-free.app'] // allow your ngrok host
   },
   resolve: {
     alias: {
