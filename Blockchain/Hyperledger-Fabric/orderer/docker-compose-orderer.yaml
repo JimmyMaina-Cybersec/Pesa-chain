@@ -1,17 +1,16 @@
-version: "2"
-
 networks:
   test:
 
 services:
 
   orderer.example.com:
-    container_name: orderer.example.com
+    container_name: orderer.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
@@ -38,16 +37,17 @@ services:
 
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/genesis.block
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/var/hyperledger/orderer/tls
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/tls:/var/hyperledger/orderer/tls
 
   orderer2.example.com:
-    container_name: orderer2.example.com
+    container_name: orderer2.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
@@ -73,16 +73,17 @@ services:
       - test
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/msp:/var/hyperledger/orderer/msp
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/tls:/var/hyperledger/orderer/tls
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/tls:/var/hyperledger/orderer/tls
 
   orderer3.example.com:
-    container_name: orderer3.example.com
+    container_name: orderer3.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
@@ -108,6 +109,6 @@ services:
       - test
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer3.example.com/msp:/var/hyperledger/orderer/msp
-      - ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer3.example.com/tls:/var/hyperledger/orderer/tls
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/tls:/var/hyperledger/orderer/tls
 

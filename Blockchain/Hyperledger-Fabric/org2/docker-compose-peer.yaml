@@ -34,6 +34,7 @@ services:
       service: peer-base
     environment:
       - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=Org2MSP
 
@@ -78,6 +79,7 @@ services:
       service: peer-base
     environment:
       - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=Org2MSP
 

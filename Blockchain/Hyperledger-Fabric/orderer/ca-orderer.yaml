@@ -1,5 +1,3 @@
-version: '2'
-
 networks:
   test:
 
@@ -8,7 +6,7 @@ services:
     image: hyperledger/fabric-ca
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-orderer
+      - FABRIC_CA_SERVER_CA_NAME=ca.orderer.com
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=9054
     ports:
@@ -16,7 +14,8 @@ services:
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
       - ./fabric-ca/ordererOrg:/etc/hyperledger/fabric-ca-server
-    container_name: ca_orderer
+    container_name: ca.orderer.com
+    hostname: ca.orderer.com
     networks:
       - test
 
