@@ -75,7 +75,7 @@ organizations:
 
 orderers:
   orderer.example.com:
-    url: grpcs://localhost:7050
+    url: grpcs://orderer.com:7050
     grpcOptions:
       ssl-target-name-override: orderer.example.com
     tlsCACerts:
@@ -85,7 +85,7 @@ orderers:
     grpcOptions:
       ssl-target-name-override: orderer2.example.com
     tlsCACerts:
-      path: ../orderer/crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
+      path: ../orderer/crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
   orderer3.example.com:
     url: grpcs://localhost:9050
     grpcOptions:
@@ -123,7 +123,7 @@ peers:
       ssl-target-name-override: peer1.org2.example.com
       grpc.keepalive_time_ms: 600000
     tlsCACerts:
-      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/tlscacerts/tls-localhost-8054-ca-org2-example-com.pem 
+      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/tlscacerts/tls-localhost-8054-ca-org2-example-com.pem
 
 certificateAuthorities:
   ca.org1.example.com:

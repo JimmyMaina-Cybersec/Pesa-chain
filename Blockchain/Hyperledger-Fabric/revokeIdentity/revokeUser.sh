@@ -56,7 +56,7 @@ signEnvolope(){
 }
 
 updateChannel(){
-        peer channel update -f config_update_in_envelope.pb -c $CHANNEL_NAME -o localhost:7050  --tls --cafile $ORDERER_CA 
+        peer channel update -f config_update_in_envelope.pb -c $CHANNEL_NAME -o orderer.com:7050  --tls --cafile $ORDERER_CA
 }
 
 

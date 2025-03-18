@@ -50,7 +50,7 @@ setGlobalsForPeer1Org2() {
 
 fetchChannelBlock() {
   setGlobalsForPeer0Org2
-  peer channel fetch 0 $CHANNEL_NAME.block -o ca.pesachain.com:7050 --ordererTLSHostnameOverride orderer.com -c $CHANNEL_NAME --tls --cafile $ORDERER_CA
+  peer channel fetch 0 $CHANNEL_NAME.block -o orderer.com:7050 --ordererTLSHostnameOverride orderer.com -c $CHANNEL_NAME --tls --cafile $ORDERER_CA
 }
 joinChannel() {
   setGlobalsForPeer0Org2
@@ -63,7 +63,7 @@ joinChannel() {
 updateAnchorPeers() {
 
   setGlobalsForPeer0Org2
-  peer channel update -o ca.pesachain.com:7050 --ordererTLSHostnameOverride orderer.com -c $CHANNEL_NAME -f ./${CORE_PEER_LOCALMSPID}anchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA
+  peer channel update -o orderer.com:7050 --ordererTLSHostnameOverride orderer.com -c $CHANNEL_NAME -f ./${CORE_PEER_LOCALMSPID}anchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA
 
 }
 fetchChannelBlock
