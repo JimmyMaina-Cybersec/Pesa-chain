@@ -20,16 +20,16 @@ nodeOrgnisationUnit() {
   echo 'NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/orderer-9054-ca-orderer.pem
+    Certificate: cacerts/ca-orderer-com-9054-ca-orderer-com.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/orderer-9054-ca-orderer.pem
+    Certificate: cacerts/ca-orderer-com-9054-ca-orderer-com.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/orderer-9054-ca-orderer.pem
+    Certificate: cacerts/ca-orderer-com-9054-ca-orderer-com.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/orderer-9054-ca-orderer.pem
+    Certificate: cacerts/ca-orderer-com-9054-ca-orderer-com.pem
     OrganizationalUnitIdentifier: orderer' >${PWD}/crypto-config-ca/ordererOrganizations/orderer.com/msp/config.yaml
   sleep 2
 }

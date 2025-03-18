@@ -11,23 +11,23 @@ setupOrg2CA() {
 createCertificatOrg2() {
   echo "Enroll the CA admin"
 
-  fabric-ca-client enroll -u https://admin:adminpw@localhost:8054 --caname ca.org2.example.com --tls.certfiles ${PWD}/fabric-ca/org2/tls-cert.pem
+  fabric-ca-client enroll -u https://admin:adminpw@ca.org2.example.com:8054 --caname ca.org2.example.com --tls.certfiles ${PWD}/fabric-ca/org2/tls-cert.pem
 }
 nodeOrgUnits() {
 
   echo 'NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-org2-example-com.pem
+    Certificate: cacerts/ca-org2-example-com-8054-ca-org2-example-com.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-org2-example-com.pem
+    Certificate: cacerts/ca-org2-example-com-8054-ca-org2-example-com.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-org2-example-com.pem
+    Certificate: cacerts/ca-org2-example-com-8054-ca-org2-example-com.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-org2-example-com.pem
+    Certificate: cacerts/ca-org2-example-com-8054-ca-org2-example-com.pem
     OrganizationalUnitIdentifier: orderer' >${PWD}/crypto-config-ca/peerOrganizations/org2.example.com/msp/config.yaml
 
 }

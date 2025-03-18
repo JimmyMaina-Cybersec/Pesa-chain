@@ -23,16 +23,16 @@ nodeOrgnisationUnit() {
   echo 'NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/pesachain-7054-ca-pesachain.com.pem
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/pesachain-7054-ca-pesachain.com.pem
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/pesachain-7054-ca-pesachain.com.pem
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/pesachain-7054-ca-pesachain.com.pem
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
     OrganizationalUnitIdentifier: orderer' >${PWD}/crypto-config-ca/peerOrganizations/pesachain.com/msp/config.yaml
 
 }
