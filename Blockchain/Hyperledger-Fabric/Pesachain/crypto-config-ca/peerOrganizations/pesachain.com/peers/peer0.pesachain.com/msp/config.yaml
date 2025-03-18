@@ -1,0 +1,14 @@
+NodeOUs:
+  Enable: true
+  ClientOUIdentifier:
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
+    OrganizationalUnitIdentifier: client
+  PeerOUIdentifier:
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
+    OrganizationalUnitIdentifier: peer
+  AdminOUIdentifier:
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
+    OrganizationalUnitIdentifier: admin
+  OrdererOUIdentifier:
+    Certificate: cacerts/ca-pesachain-com-7054-ca-pesachain-com.pem
+    OrganizationalUnitIdentifier: orderer
