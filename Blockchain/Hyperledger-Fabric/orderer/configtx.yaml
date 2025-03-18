@@ -19,7 +19,7 @@ Organizations:
         ID: OrdererMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: ./crypto-config-ca/ordererOrganizations/example.com/msp/
+        MSPDir: ./crypto-config-ca/ordererOrganizations/orderer.com/msp/
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -35,15 +35,15 @@ Organizations:
                 Type: Signature
                 Rule: "OR('OrdererMSP.admin')"
 
-    - &Org1
+    - &Pesachain
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org1MSP
+        Name: PesachainMSP
 
         # ID to load the MSP definition as
-        ID: Org1MSP
+        ID: PesachainMSP
 
-        MSPDir: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/msp
+        MSPDir: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -51,23 +51,23 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+                Rule: "OR('PesachainMSP.admin', 'PesachainMSP.peer', 'PesachainMSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+                Rule: "OR('PesachainMSP.admin', 'PesachainMSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+                Rule: "OR('PesachainMSP.admin', 'PesachainMSP.client')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.peer')"
+                Rule: "OR('PesachainMSP.peer')"
 
         # leave this flag set to true.
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
             # for cross org gossip communication.  Note, this value is only
             # encoded in the genesis block in the Application section context
-            - Host: peer0.org1.example.com
+            - Host: peer0.pesachain.com
               Port: 7051
 
     - &Org2
@@ -212,11 +212,11 @@ Orderer: &OrdererDefaults
         Consenters:
         - Host: orderer.example.com
           Port: 7050
-          ClientTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-          ServerTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+          ClientTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/tls/server.crt
+          ServerTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/tls/server.crt
 
     Addresses:
-        - orderer.example.com:7050
+        - orderer.com:7050
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s
@@ -292,22 +292,23 @@ Channel: &ChannelDefaults
         <<: *ChannelCapabilities
 
 ################################################################################
-#
 #   Profile
 #
 #   - Different configuration profiles may be encoded here to be specified
 #   as parameters to the configtxgen tool
-#
 ################################################################################
 Profiles:
 
     BasicChannel:
-        Consortium: SampleConsortium
+        # You can select one consortium for channel creation. For example, here
+        # we use the CoreFinancialServicesConsortium, but channels can be created
+        # under any consortium defined below.
+        Consortium: CoreFinancialServicesConsortium
         <<: *ChannelDefaults
         Application:
             <<: *ApplicationDefaults
             Organizations:
-                - *Org1
+                - *Pesachain
                 - *Org2
             Capabilities:
                 <<: *ApplicationCapabilities
@@ -321,30 +322,41 @@ Profiles:
             OrdererType: etcdraft
             EtcdRaft:
                 Consenters:
-                - Host: orderer.example.com
+                - Host: orderer.com
                   Port: 7050
-                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                - Host: orderer2.example.com
+                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/tls/server.crt
+                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/tls/server.crt
+                - Host: orderer2.com
                   Port: 8050
-                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                - Host: orderer3.example.com
+                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/tls/server.crt
+                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/tls/server.crt
+                - Host: orderer3.com
                   Port: 9050
-                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
-                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
+                  ClientTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/tls/server.crt
+                  ServerTLSCert: ./crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/tls/server.crt
             Addresses:
-                - orderer.example.com:7050
-                - orderer2.example.com:8050
-                - orderer3.example.com:9050
+                - orderer.com:7050
+                - orderer2.com:8050
+                - orderer3.com:9050
 
             Organizations:
             - *OrdererOrg
             Capabilities:
                 <<: *OrdererCapabilities
         Consortiums:
-            SampleConsortium:
+            CoreFinancialServicesConsortium:
                 Organizations:
-                - *Org1
-                - *Org2
-
+                    - *Pesachain
+                    - *Org2
+            TradeAndInvestmentConsortium:
+                Organizations:
+                    - *Pesachain
+                    - *Org2
+            DigitalAndEmergingFinanceConsortium:
+                Organizations:
+                    - *Pesachain
+                    - *Org2
+            RegulatoryAndSupportConsortium:
+                Organizations:
+                    - *Pesachain
+                    - *Org2
