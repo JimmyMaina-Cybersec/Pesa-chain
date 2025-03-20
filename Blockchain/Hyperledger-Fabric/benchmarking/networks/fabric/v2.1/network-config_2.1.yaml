@@ -1,12 +1,12 @@
 name: Fabric
-version: "1.0"
+version: "2.1"
 mutual-tls: false
 
 caliper:
   blockchain: fabric
   # command:
-  #   start: export FABRIC_VERSION=1.4.4;export FABRIC_CA_VERSION=1.4.4;docker-compose -f networks/fabric/docker-compose/2org1peercouchdb_solo_raft/docker-compose-tls.yaml up -d;sleep 10s
-  #   end: docker-compose -f networks/fabric/docker-compose/2org1peercouchdb_solo_raft/docker-compose-tls.yaml down;(test -z \"$(docker ps -aq)\") || docker rm $(docker ps -aq);(test -z \"$(docker images dev* -q)\") || docker rmi $(docker images dev* -q);rm -rf /tmp/hfc-*
+  #   start: export FABRIC_VERSION=1.4.4;export FABRIC_CA_VERSION=1.4.4;docker-compose -f networks/fabric/docker-compose/2pesachainpeercouchdb_solo_raft/docker-compose-tls.yaml up -d;sleep 10s
+  #   end: docker-compose -f networks/fabric/docker-compose/2pesachainpeercouchdb_solo_raft/docker-compose-tls.yaml down;(test -z \"$(docker ps -aq)\") || docker rm $(docker ps -aq);(test -z \"$(docker images dev* -q)\") || docker rmi $(docker images dev* -q);rm -rf /tmp/hfc-*
 
 info:
   Version: 2.2.4
@@ -16,50 +16,50 @@ info:
   StateDB: CouchDB
 
 clients:
-  client0.org1.example.com:
+  user1@pesachain.com:
     client:
-      organization: Org1
+      organization: Pesachain
       credentialStore:
-        path: /tmp/hfc-kvs/org1
+        path: /tmp/hfc-kvs/pesachain
         cryptoStore:
-          path: /tmp/hfc-cvs/org1
+          path: /tmp/hfc-cvs/pesachain
       clientPrivateKey:
-        path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/2b4b105355d358cb681366e0b06a59f0829f1c9f4ae91a22a95876941c391394_sk
+        path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/keystore/c9a2b2c9e0a687cda68e4995f390e79a5bcf9ef83ffc31d4ec6945e21a97d37b_sk
       clientSignedCert:
-        path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/cert.pem
+        path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/signcerts/cert.pem
 
 channels:
-  mychannel:
+  payment-channel:
     created: true
     orderers:
-    - orderer.example.com
-    - orderer2.example.com
-    - orderer3.example.com
+    - orderer.com
+    - orderer2.com
+    - orderer3.com
     peers:
-      peer0.org1.example.com:
+      peer0.pesachain.com:
         eventSource: true
       peer0.org2.example.com:
         eventSource: true
 
     contracts:
-    - id: fabcargo
-      version: "1"
+    - id: paymentccgo
+      version: "1.0.3"
       language: golang
 
 
 
 organizations:
-  Org1:
-    mspid: Org1MSP
+  Pesachain:
+    mspid: PesachainMSP
     peers:
-      - peer0.org1.example.com
-      - peer1.org1.example.com
+      - peer0.pesachain.com
+      - peer1.pesachain.com
     certificateAuthorities:
-      - ca.org1.example.com
+      - ca.pesachain.com
     adminPrivateKey:
-      path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/4bf74df2307c82693817f3128673ce8cf21580f8e21771ae9ba814d62f2b914f_sk
+      path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/Admin@pesachain.com/msp/keystore/4bf8b0d0e10ff0ef7d614d06d9f343c682d2c8ec0013f799df8ee0fa9bcb2aa6_sk
     signedCert:
-      path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/cert.pem
+      path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/Admin@pesachain.com/msp/signcerts/cert.pem
 
   Org2:
     mspid: Org2MSP
@@ -69,75 +69,75 @@ organizations:
     certificateAuthorities:
       - ca.org2.example.com
     adminPrivateKey:
-      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/72760fd3cdb35fc65241d5a82a99c04864d00d624569d7d27c46c7d49fe0cbd9_sk
+      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/2c39eaed12329fc411f655347a3fbb4c02d3ccaf7cb25aa612fad91d320119e7_sk
     signedCert:
       path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/cert.pem
 
 orderers:
-  orderer.example.com:
+  orderer.com:
     url: grpcs://orderer.com:7050
     grpcOptions:
-      ssl-target-name-override: orderer.example.com
+      ssl-target-name-override: orderer.com
     tlsCACerts:
-      path: ../orderer/crypto-config-ca/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-  orderer2.example.com:
-    url: grpcs://localhost:8050
+      path: ../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/msp/tlscacerts/tlsca.orderer.com-cert.pem
+  orderer2.com:
+    url: grpcs://orderer2.com:8050
     grpcOptions:
-      ssl-target-name-override: orderer2.example.com
+      ssl-target-name-override: orderer2.com
     tlsCACerts:
-      path: ../orderer/crypto-config-ca/ordererOrganizations/example.com/orderers/orderer2.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-  orderer3.example.com:
-    url: grpcs://localhost:9050
+      path: ../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/msp/tlscacerts/tlsca.orderer.com-cert.pem
+  orderer3.com:
+    url: grpcs://orderer3.com:9050
     grpcOptions:
-      ssl-target-name-override: orderer3.example.com
+      ssl-target-name-override: orderer3.com
     tlsCACerts:
-      path: ../orderer/crypto-config-ca/ordererOrganizations/example.com/orderers/orderer3.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+      path: ../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/msp/tlscacerts/tlsca.orderer.com-cert.pem
 
 peers:
-  peer0.org1.example.com:
-    url: grpcs://localhost:7051
+  peer0.pesachain.com:
+    url: grpcs://peer0.pesachain.com:7051
     grpcOptions:
-      ssl-target-name-override: peer0.org1.example.com
+      ssl-target-name-override: peer0.pesachain.com
       grpc.keepalive_time_ms: 600000
     tlsCACerts:
-      path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/tlscacerts/tls-localhost-7054-ca-org1-example-com.pem
+      path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/tls/tlscacerts/tls-ca-pesachain-com-7054-ca-pesachain-com.pem
 
-  peer1.org1.example.com:
-    url: grpcs://localhost:8051
+  peer1.pesachain.com:
+    url: grpcs://peer1.pesachain.com:8051
     grpcOptions:
-      ssl-target-name-override: peer1.org1.example.com
+      ssl-target-name-override: peer1.pesachain.com
       grpc.keepalive_time_ms: 600000
     tlsCACerts:
-      path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/tlscacerts/tls-localhost-7054-ca-org1-example-com.pem
+      path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/tls/tlscacerts/tls-ca-pesachain-com-7054-ca-pesachain-com.pem
 
   peer0.org2.example.com:
-    url: grpcs://localhost:9051
+    url: grpcs://peer0.org2.example.com:9051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
       grpc.keepalive_time_ms: 600000
     tlsCACerts:
-      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/tlscacerts/tls-localhost-8054-ca-org2-example-com.pem
+      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/tlscacerts/tls-ca-org2-example-com-8054-ca-org2-example-com.pem
   peer1.org2.example.com:
-    url: grpcs://localhost:10051
+    url: grpcs://peer1.org2.example.com:10051
     grpcOptions:
       ssl-target-name-override: peer1.org2.example.com
       grpc.keepalive_time_ms: 600000
     tlsCACerts:
-      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/tlscacerts/tls-localhost-8054-ca-org2-example-com.pem
+      path: ../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/tlscacerts/tls-ca-org2-example-com-8054-ca-org2-example-com.pem
 
 certificateAuthorities:
-  ca.org1.example.com:
-    url: https://localhost:7054
+  ca.pesachain.com:
+    url: https://ca.pesachain.com:7054
     httpOptions:
       verify: false
     tlsCACerts:
-      path: ../org1/crypto-config-ca/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+      path: ../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/tlsca/tlsca.pesachain.com-cert.pem
     registrar:
       - enrollId: admin
         enrollSecret: adminpw
 
   ca.org2.example.com:
-    url: https://localhost:8054
+    url: https://ca.org2.example.com:8054
     httpOptions:
       verify: false
     tlsCACerts:

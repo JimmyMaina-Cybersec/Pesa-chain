@@ -1,0 +1,65 @@
+test:
+  workers:
+    type: local
+    number: 1
+  rounds:
+    - label: Query all transactions.
+      txDuration: 30          # Duration in seconds
+      rateControl:
+        type: fixed-load
+        opts:
+          tps: 5              # 5 transactions per second
+      workload:
+        module: benchmarks/scenario/simple/paymentsccgo/queryAllTransactions.js
+        arguments: {}         # No arguments required
+
+    - label: Query a transaction.
+      txDuration: 10
+      rateControl:
+        type: fixed-load
+        opts:
+          transactionLoad: 5  # 5 transactions per round
+      workload:
+        module: benchmarks/scenario/simple/paymentsccgo/queryTransaction.js
+        arguments:
+          transactionID: "TXN1"
+          transactionType: "EFT"
+
+    - label: Create a transaction.
+      txDuration: 30
+      rateControl:
+        type: fixed-load
+        opts:
+          transactionLoad: 5  # 5 transactions per round
+      workload:
+        module: benchmarks/scenario/simple/paymentsccgo/createTransaction.js
+        arguments:
+          transactionID: "TXN3"
+          transactionType: "EFT"
+          sender: "Alice"
+          receiver: "Bob"
+          amount: 100.0
+          currency: "USD"
+
+monitors:
+  resource:
+    - module: docker
+      options:
+        interval: 5           # Poll Docker metrics every 5 seconds
+        containers:
+          - all              # Monitor all containers
+      charting:
+        bar:
+          metrics: [Memory(avg), CPU%(avg)]
+        polar:
+          metrics: [all]
+    - module: process
+      options:
+        interval: 3
+        processes:
+          - command: "node"
+            arguments: "caliper"
+            multiOutput: "avg"
+      charting:
+        bar:
+          metrics: [all]
