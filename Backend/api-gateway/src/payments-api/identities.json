@@ -1,0 +1,12 @@
+{
+  "PesachainUser": {
+    "certificatePath": "../../../Blockchain/Hyperledger-Fabric/Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/signcerts/cert.pem",
+    "privateKeyPath": "../../../Blockchain/Hyperledger-Fabric/Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/keystore/privateKey.pem",
+    "mspId": "PesachainMSP"
+  },
+  "Org2User": {
+    "certificatePath": "../../../Blockchain/Hyperledger-Fabric/org2/crypto-config-ca/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/cert.pem",
+    "privateKeyPath": "../../../Blockchain/Hyperledger-Fabric/org2/crypto-config-ca/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/keystore/94b51ce72e8bbbbc7f1cff36546204ca918c780cb9accb0741db246b7c507b46_sk",
+    "mspId": "Org2MSP"
+  }
+}

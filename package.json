@@ -32,8 +32,9 @@
     "typescript-eslint": "^8.13.0"
   },
   "dependencies": {
-    "@hyperledger/caliper-core": "^0.6.0",
+    "@hyperledger/caliper-core": "^0.3.0",
     "dotenv": "^16.4.7",
+    "fabric-network": "^2.2.20",
     "mongodb": "^6.12.0",
     "ts-node": "^10.9.2"
   }
