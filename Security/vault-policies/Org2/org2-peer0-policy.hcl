@@ -1,0 +1,3 @@
+path "secret/crypto/org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/*" {
+    capabilities = ["read", "list"]
+}
