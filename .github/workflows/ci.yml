@@ -122,62 +122,99 @@ jobs:
       !contains(github.ref, 'refs/heads/bugfix/')
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install Docker Compose
-        run: |
-          if ! [ -x "$(command -v docker-compose)" ]; then
-            echo "Docker Compose not found. Installing..."
-            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-          else
-            echo "Docker Compose is already installed."
-          fi
-          docker-compose --version
+    - name: Install Docker Compose
+      run: |
+        if ! [ -x "$(command -v docker-compose)" ]; then
+          echo "Docker Compose not found. Installing..."
+          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+        else
+          echo "Docker Compose is already installed."
+        fi
+        docker-compose --version
 
-      - name: Select Tagging scheme
-        id: get_tag
-        run: |
-          TAG=$(git tag --points-at HEAD)
-          if [ -z "$TAG" ]; then
-            echo "No tags found in the latest commit. Using commit hash."
-            echo "git_tag=$(git rev-parse --short HEAD)"
-            echo "git_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          else
-            echo "Using tag from the latest commit: $TAG"
-            echo "git_tag=$TAG"
-            echo "git_tag=$TAG" >> $GITHUB_OUTPUT
-          fi
+    - name: Start Blockchain Network
+      run: |
+        # Bring up all network components defined in your compose files
+          # Orderer Service
+          ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
+          ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
 
-      - name: Set Environment Tag Based on Branch
-        run: |
-          HEAD=${GITHUB_REF#refs/heads/}
-          if [[ "$HEAD" == "develop" || "$HEAD" == "maintenance" ]]; then
-            IMAGE_TAG="dev-${{ steps.get_tag.outputs.git_tag }}"
-          elif [[ "$HEAD" == release/* || "$HEAD" == "hotfix/*" ]]; then
-            IMAGE_TAG="stag-${{ steps.get_tag.outputs.git_tag }}"
-          elif [[ "$HEAD" == "master" ]]; then
-            IMAGE_TAG="prod-${{ steps.get_tag.outputs.git_tag }}"
-          fi
-          echo "IMAGE_TAG=$IMAGE_TAG"
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          docker-compose -f $ORDERER_CA_YAML_FILE up -d
+          docker-compose -f $ORDERER_NODES_COMPOSE_FILE up -d
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          # Pesachain Organization
+          PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
+          PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
 
-      - name: Build and Push Blockchain Docker Image
-        run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
-          if [[ "$BRANCH" == "release/*" || "$BRANCH" == "master" ]]; then
-            docker-compose -f docker-compose.yml build --build-arg NODE_ENV=production blockchain
-          else
-            docker-compose -f docker-compose.yml build blockchain
-          fi
-          docker-compose -f docker-compose.yml push blockchain
+          docker-compose -f $PESACHAIN_CA_YAML_FILE up -d
+          docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE up -d
+
+          # Organization 2
+          ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
+          ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
+
+          docker-compose -f $ORG2_CA_YAML_FILE up -d
+          docker-compose -f $ORG2_PEERS_COMPOSE_FILE up -d
+      # Optionally, add a sleep or health-check loop here to wait for services to be ready
+    - name: Wait for Network to Initialize
+      run: |
+        echo "Waiting for network to initialize..."
+        sleep 30  # Adjust time as necessary, or run custom health checks
+
+    - name: Run Fabric Integration Tests
+      run: |
+        echo "Running integration tests..."
+        # For example, you could run a script that validates channel creation,
+        # chaincode installation, or simply check container statuses:
+        docker ps
+        # Alternatively, run custom scripts:
+        # ./scripts/run-fabric-tests.sh
+
+    - name: Tear Down Network
+      run: |
+        echo "Tearing down the network..."
+          docker-compose -f $ORDERER_CA_YAML_FILE down
+          docker-compose -f $ORDERER_NODES_COMPOSE_FILE down
+
+          docker-compose -f $PESACHAIN_CA_YAML_FILE down
+          docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE down
+
+          docker-compose -f $ORG2_CA_YAML_FILE down
+          docker-compose -f $ORG2_PEERS_COMPOSE_FILE down
+
+      # - name: Build and Push Blockchain Docker Image
+      #   run: |
+      #     # Orderer Service
+      #     ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
+      #     ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
+
+      #     docker-compose -f $ORDERER_CA_YAML_FILE build
+      #     docker-compose -f $ORDERER_CA_YAML_FILE push
+      #     docker-compose -f $ORDERER_NODES_COMPOSE_FILE build
+      #     docker-compose -f $ORDERER_NODES_COMPOSE_FILE push
+
+      #     # Pesachain Organization
+      #     PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
+      #     PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
+
+      #     docker-compose -f $PESACHAIN_CA_YAML_FILE build
+      #     docker-compose -f $PESACHAIN_CA_YAML_FILE push
+      #     docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE build
+      #     docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE push
+
+      #     # Organization 2
+      #     ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
+      #     ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
+
+      #     docker-compose -f $ORG2_CA_YAML_FILE build
+      #     docker-compose -f $ORG2_CA_YAML_FILE push
+      #     docker-compose -f $ORG2_PEERS_COMPOSE_FILE build
+      #     docker-compose -f $ORG2_PEERS_COMPOSE_FILE push
+
 
   build-scan-push-web-image:
     runs-on: ubuntu-latest
@@ -330,7 +367,7 @@ jobs:
           # Set the Docker Hub repository name
           REPO_NAME=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO_NAME }}
           # Set the threshold for cleaning up images (e.g., 30 days)
-          THRESHOLD_DATE=$(date --date='30 days ago' +'%Y-%m-%d')
+          THRESHOLD_DATE=$(date -ate='30 days ago' +'%Y-%m-%d')
           # Get the list of tags for the repository
           TAGS=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags?page_size=100" | jq -r '.results[] | .name')
           # Loop through each tag and delete it if older than the threshold date
