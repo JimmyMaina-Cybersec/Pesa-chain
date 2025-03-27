@@ -1,0 +1,11 @@
+services:
+  vault-agent:
+    image: hashicorp/vault-entreprise:latest
+    restart: always
+    ports:
+      - "18200:8200"
+    volumes:
+      - ./Vault:vault:rw
+    environment:
+      - VAULT_ADDR: "http://127.0.0.1:8200"
+    container_name: vault-agent
