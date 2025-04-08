@@ -1,11 +1,242 @@
 services:
-  vault-agent:
-    image: hashicorp/vault-entreprise:latest
-    restart: always
-    ports:
-      - "18200:8200"
-    volumes:
-      - ./Vault:vault:rw
+  vault-server:
+    image: hashicorp/vault:1.9.0
+    command: server -dev -dev-root-token-id=root.token
+    restart: unless-stopped
     environment:
-      - VAULT_ADDR: "http://127.0.0.1:8200"
-    container_name: vault-agent
+      VAULT_DEV_ROOT_TOKEN_ID: "root.token"
+    ports:
+      - "8200:8200"
+    volumes:
+      - Vault:/Vault
+
+  orderer1-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-orderer1.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/orderer1-role_roleid.txt:/Vault/vault-creds/orderer1-role_roleid.txt
+      - Vault/vault-creds/orderer1-role_secretid.txt:/Vault/vault-creds/orderer1-role_secretid.txt
+      - Vault/vault-tmpl/orderer:/Vault/vault-tmpl/orderer
+      - Vault/vault-tokens/orderer/orderer1:/Vault/vault-tokens/orderer/orderer1
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  orderer2-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-orderer2.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/orderer2-role_roleid.txt:/Vault/vault-creds/orderer2-role_roleid.txt
+      - Vault/vault-creds/orderer2-role_secretid.txt:/Vault/vault-creds/orderer2-role_secretid.txt
+      - Vault/vault-tmpl/orderer:/Vault/vault-tmpl/orderer
+      - Vault/vault-tokens/orderer/orderer2:/Vault/vault-tokens/orderer/orderer2
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  orderer3-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-orderer3.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/orderer3-role_roleid.txt:/Vault/vault-creds/orderer3-role_roleid.txt
+      - Vault/vault-creds/orderer3-role_secretid.txt:/Vault/vault-creds/orderer3-role_secretid.txt
+      - Vault/vault-tmpl/orderer:/Vault/vault-tmpl/orderer
+      - Vault/vault-tokens/orderer/orderer3:/Vault/vault-tokens/orderer/orderer3
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  org2-admin-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-org2-admin.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/org2-admin-role_roleid.txt:/Vault/vault-creds/org2-admin-role_roleid.txt
+      - Vault/vault-creds/org2-admin-role_secretid.txt:/Vault/vault-creds/org2-admin-role_secretid.txt
+      - Vault/vault-tmpl/org2/admin-privKey.ctmpl:/Vault/vault-tmpl/org2/admin-privKey.ctmpl
+      - Vault/vault-tmpl/org2/admin-signcert.ctmpl:/Vault/vault-tmpl/org2/admin-signcert.ctmpl
+      - Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/org2-ca.ctmpl
+      - Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/org2-tls.ctmpl
+      - Vault/vault-tokens/org2/admin:/Vault/vault-tokens/org2/admin
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  org2-certrenewal-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-org2-certRenewalService.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/org2-certrenewalservice-role_roleid.txt:/Vault/vault-creds/org2-certrenewalservice-role_roleid.txt
+      - Vault/vault-creds/org2-certrenewalservice-role_secretid.txt:/Vault/vault-creds/org2-certrenewalservice-role_secretid.txt
+      - Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/org2-ca.ctmpl
+      - Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/org2-tls.ctmpl
+      - Vault/vault-tokens/org2/certRenewalService:/Vault/vault-tokens/org2/certRenewalService
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  org2-client1-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-org2-client1.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/org2-client1-role_roleid.txt:/Vault/vault-creds/org2-client1-role_roleid.txt
+      - Vault/vault-creds/org2-client1-role_secretid.txt:/Vault/vault-creds/org2-client1-role_secretid.txt
+      - Vault/vault-tmpl/org2/client1-privKey.ctmpl:/Vault/vault-tmpl/org2/client1-privKey.ctmpl
+      - Vault/vault-tmpl/org2/client1-signcert.ctmpl:/Vault/vault-tmpl/org2/client1-signcert.ctmpl
+      - Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/org2-ca.ctmpl
+      - Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/org2-tls.ctmpl
+      - Vault/vault-tokens/org2/client1:/Vault/vault-tokens/org2/client1
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  org2-peer0-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-org2-peer0.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/org2-peer0-role_roleid.txt:/Vault/vault-creds/org2-peer0-role_roleid.txt
+      - Vault/vault-creds/org2-peer0-role_secretid.txt:/Vault/vault-creds/org2-peer0-role_secretid.txt
+      - Vault/vault-tmpl/org2/peer0-privKey.ctmpl:/Vault/vault-tmpl/org2/peer0-privKey.ctmpl
+      - Vault/vault-tmpl/org2/peer0-signcert.ctmpl:/Vault/vault-tmpl/org2/peer0-signcert.ctmpl
+      - Vault/vault-tmpl/org2/peer0-srvCert.ctmpl:/Vault/vault-tmpl/org2/peer0-srvCert.ctmpl
+      - Vault/vault-tmpl/org2/peer0-srvKey.ctmpl:/Vault/vault-tmpl/org2/peer0-srvKey.ctmpl
+      - Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/org2-ca.ctmpl
+      - Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/org2-tls.ctmpl
+      - Vault/vault-tokens/org2/peer0:/Vault/vault-tokens/org2/peer0
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  org2-peer1-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-org2-peer1.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/org2-peer1-role_roleid.txt:/Vault/vault-creds/org2-peer1-role_roleid.txt
+      - Vault/vault-creds/org2-peer1-role_secretid.txt:/Vault/vault-creds/org2-peer1-role_secretid.txt
+      - Vault/vault-tmpl/org2/peer1-privKey.ctmpl:/Vault/vault-tmpl/org2/peer1-privKey.ctmpl
+      - Vault/vault-tmpl/org2/peer1-signcert.ctmpl:/Vault/vault-tmpl/org2/peer1-signcert.ctmpl
+      - Vault/vault-tmpl/org2/peer1-srvCert.ctmpl:/Vault/vault-tmpl/org2/peer1-srvCert.ctmpl
+      - Vault/vault-tmpl/org2/peer1-srvKey.ctmpl:/Vault/vault-tmpl/org2/peer1-srvKey.ctmpl
+      - Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/org2-ca.ctmpl
+      - Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/org2-tls.ctmpl
+      - Vault/vault-tokens/org2/peer1:/Vault/vault-tokens/org2/peer1
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  pesachain-admin-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    volumes:
+      - Vault/vault-config/vault-agent-pesachain-admin.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/pesachain-admin-role_roleid.txt:/Vault/vault-creds/pesachain-admin-role_roleid.txt
+      - Vault/vault-creds/pesachain-admin-role_secretid.txt:/Vault/vault-creds/pesachain-admin-role_secretid.txt
+      - Vault/vault-tmpl/pesachain/admin-privKey.ctmpl:/Vault/vault-tmpl/pesachain/admin-privKey.ctmpl
+      - Vault/vault-tmpl/pesachain/admin-signcert.ctmpl:/Vault/vault-tmpl/pesachain/admin-signcert.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl
+      - Vault/vault-tokens/pesachain/admin:/Vault/vault-tokens/pesachain/admin
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  pesachain-certrenewal-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-pesachain-certRenewalService.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/pesachain-certrenewalservice-role_roleid.txt:/Vault/vault-creds/pesachain-certrenewalservice-role_roleid.txt
+      - Vault/vault-creds/pesachain-certrenewalservice-role_secretid.txt:/Vault/vault-creds/pesachain-certrenewalservice-role_secretid.txt
+      - Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl
+      - Vault/vault-tokens/pesachain/certRenewalService:/Vault/vault-tokens/pesachain/certRenewalService
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  pesachain-client1-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-pesachain-client1.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/pesachain-client1-role_roleid.txt:/Vault/vault-creds/pesachain-client1-role_roleid.txt
+      - Vault/vault-creds/pesachain-client1-role_secretid.txt:/Vault/vault-creds/pesachain-client1-role_secretid.txt
+      - Vault/vault-tmpl/pesachain/client1-privKey.ctmpl:/Vault/vault-tmpl/pesachain/client1-privKey.ctmpl
+      - Vault/vault-tmpl/pesachain/client1-signcert.ctmpl:/Vault/vault-tmpl/pesachain/client1-signcert.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl
+      - Vault/vault-tokens/pesachain/client1:/Vault/vault-tokens/pesachain/client1
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  pesachain-peer0-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-pesachain-peer0.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/pesachain-peer0-role_roleid.txt:/Vault/vault-creds/pesachain-peer0-role_roleid.txt
+      - Vault/vault-creds/pesachain-peer0-role_secretid.txt:/Vault/vault-creds/pesachain-peer0-role_secretid.txt
+      - Vault/vault-tmpl/pesachain/peer0-privKey.ctmpl:/Vault/vault-tmpl/pesachain/peer0-privKey.ctmpl
+      - Vault/vault-tmpl/pesachain/peer0-signcert.ctmpl:/Vault/vault-tmpl/pesachain/peer0-signcert.ctmpl
+      - Vault/vault-tmpl/pesachain/peer0-srvCert.ctmpl:/Vault/vault-tmpl/pesachain/peer0-srvCert.ctmpl
+      - Vault/vault-tmpl/pesachain/peer0-srvKey.ctmpl:/Vault/vault-tmpl/pesachain/peer0-srvKey.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl
+      - Vault/vault-tokens/pesachain/peer0:/Vault/vault-tokens/pesachain/peer0
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+  pesachain-peer1-agent:
+    image: hashicorp/vault:1.9.0
+    command: agent -config=/Vault/config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Vault/vault-config/vault-agent-pesachain-peer1.hcl:/Vault/config/agent.hcl
+      - Vault/vault-creds/pesachain-peer1-role_roleid.txt:/Vault/vault-creds/pesachain-peer1-role_roleid.txt
+      - Vault/vault-creds/pesachain-peer1-role_secretid.txt:/Vault/vault-creds/pesachain-peer1-role_secretid.txt
+      - Vault/vault-tmpl/pesachain/peer1-privKey.ctmpl:/Vault/vault-tmpl/pesachain/peer1-privKey.ctmpl
+      - Vault/vault-tmpl/pesachain/peer1-signcert.ctmpl:/Vault/vault-tmpl/pesachain/peer1-signcert.ctmpl
+      - Vault/vault-tmpl/pesachain/peer1-srvCert.ctmpl:/Vault/vault-tmpl/pesachain/peer1-srvCert.ctmpl
+      - Vault/vault-tmpl/pesachain/peer1-srvKey.ctmpl:/Vault/vault-tmpl/pesachain/peer1-srvKey.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl
+      - Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl
+      - Vault/vault-tokens/pesachain/peer1:/Vault/vault-tokens/pesachain/peer1
+    environment:
+      VAULT_ADDR: "http://vault-server:8200"
+    depends_on:
+      - vault-server
+
+volumes:
+  Vault:

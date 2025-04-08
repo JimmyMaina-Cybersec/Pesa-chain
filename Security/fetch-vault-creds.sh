@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Create the vault_creds folder if it doesn't exist
-mkdir -p vault_creds
+# Create the vault-creds folder if it doesn't exist
+mkdir -p vault-creds
 
 # Define the list of roles
 roles=(
@@ -43,8 +43,8 @@ for role in "${roles[@]}"; do
   secret_id=$(echo "$secret_id_response" | jq -r '.data.secret_id')
 
   # Save the role_id and secret_id to files
-  echo "$role_id" > "vault_creds/${role}_roleid.txt"
-  echo "$secret_id" > "vault_creds/${role}_secretid.txt"
+  echo "$role_id" > "vault-creds/${role}_roleid.txt"
+  echo "$secret_id" > "vault-creds/${role}_secretid.txt"
 done
 
-echo "Vault credentials have been stored in the 'vault_creds' folder."
+echo "Vault credentials have been stored in the 'vault-creds' folder."

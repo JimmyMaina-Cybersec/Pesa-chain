@@ -136,29 +136,38 @@ jobs:
         fi
         docker-compose --version
 
+    - name: Start Fabric Vault agent
+      run: |
+        docker-compose -f ./Security/docker-compose-vault-agent.yaml up -d
+
+    - name: Wait for Vault agent to initialize
+      run: |
+        echo "Waiting for Vault agent to initialize..."
+        sleep 60  # Adjust time as necessary
+
     - name: Start Blockchain Network
       run: |
         # Bring up all network components defined in your compose files
-          # Orderer Service
-          ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
-          ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
+        # Orderer Service
+        ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
+        ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
 
-          docker-compose -f $ORDERER_CA_YAML_FILE up -d
-          docker-compose -f $ORDERER_NODES_COMPOSE_FILE up -d
+        docker-compose -f $ORDERER_CA_YAML_FILE up -d
+        docker-compose -f $ORDERER_NODES_COMPOSE_FILE up -d
 
-          # Pesachain Organization
-          PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
-          PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
+        # Pesachain Organization
+        PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
+        PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
 
-          docker-compose -f $PESACHAIN_CA_YAML_FILE up -d
-          docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE up -d
+        docker-compose -f $PESACHAIN_CA_YAML_FILE up -d
+        docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE up -d
 
-          # Organization 2
-          ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
-          ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
+        # Organization 2
+        ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
+        ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
 
-          docker-compose -f $ORG2_CA_YAML_FILE up -d
-          docker-compose -f $ORG2_PEERS_COMPOSE_FILE up -d
+        docker-compose -f $ORG2_CA_YAML_FILE up -d
+        docker-compose -f $ORG2_PEERS_COMPOSE_FILE up -d
       # Optionally, add a sleep or health-check loop here to wait for services to be ready
     - name: Wait for Network to Initialize
       run: |

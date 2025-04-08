@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/org2/crypto-config-ca/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem" -}}
+{{ .Data.data.content }}
+{{- end }}

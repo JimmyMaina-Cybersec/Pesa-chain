@@ -1,0 +1,13 @@
+FROM hashicorp/vault:1.9.0
+
+# Install a shell; if using Alpine-based image, busybox or sh is included,
+# otherwise, install a minimal shell if needed.
+# For example, if it's based on a Debian variant, you might run:
+RUN apk update && apk add --no-cache bash
+
+# Copy your startup script
+COPY start_client_agent.sh /start_client_agent.sh
+RUN chmod +x /start_client_agent.sh
+
+# Use your custom script as the entrypoint.
+ENTRYPOINT ["/bin/sh", "/start_client_agent.sh"]

@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp/keystore/36a12fa9e886c3682e3119d9115a0dfc34c9dce74500561f2d52efa869c7c902_sk" -}}
+{{ .Data.data.content }}
+{{- end }}

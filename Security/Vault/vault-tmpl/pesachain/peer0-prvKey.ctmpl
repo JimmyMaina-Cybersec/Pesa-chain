@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/msp/keystore/3bb565d1e3f49d1baaa9a7774c65a230b2ab0c5c10beec0346ab6a886e71681a_sk" -}}
+{{ .Data.data.content }}
+{{- end }}
