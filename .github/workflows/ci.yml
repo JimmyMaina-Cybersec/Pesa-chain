@@ -121,109 +121,43 @@ jobs:
       !contains(github.ref, 'refs/heads/feature/') &&
       !contains(github.ref, 'refs/heads/bugfix/')
 
+    env:
+      COMPOSE_FILE_PATH: ./Blockchain/docker-compose.yaml
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install Docker Compose
-      run: |
-        if ! [ -x "$(command -v docker-compose)" ]; then
-          echo "Docker Compose not found. Installing..."
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-        else
-          echo "Docker Compose is already installed."
-        fi
-        docker-compose --version
+      - name: Install Docker Compose
+        run: |
+          if ! [ -x "$(command -v docker-compose)" ]; then
+            echo "Installing Docker Compose..."
+            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose --version
 
-    - name: Start Fabric Vault agent
-      run: |
-        docker-compose -f ./Security/docker-compose-vault-agent.yaml up -d
+      - name: Start Fabric Network (including Vault Agent)
+        run: |
+          echo "Starting Fabric network and Vault agent..."
+          docker-compose -f $COMPOSE_FILE_PATH up -d
 
-    - name: Wait for Vault agent to initialize
-      run: |
-        echo "Waiting for Vault agent to initialize..."
-        sleep 60  # Adjust time as necessary
+      - name: Wait for Network to Initialize
+        run: |
+          echo "Waiting for services to initialize..."
+          sleep 60  # Adjust if needed or replace with health check loop
 
-    - name: Start Blockchain Network
-      run: |
-        # Bring up all network components defined in your compose files
-        # Orderer Service
-        ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
-        ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
+      - name: Run Fabric Integration Tests
+        run: |
+          echo "Running integration tests..."
+          docker ps
+          # Optional: ./scripts/run-fabric-tests.sh
 
-        docker-compose -f $ORDERER_CA_YAML_FILE up -d
-        docker-compose -f $ORDERER_NODES_COMPOSE_FILE up -d
-
-        # Pesachain Organization
-        PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
-        PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
-
-        docker-compose -f $PESACHAIN_CA_YAML_FILE up -d
-        docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE up -d
-
-        # Organization 2
-        ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
-        ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
-
-        docker-compose -f $ORG2_CA_YAML_FILE up -d
-        docker-compose -f $ORG2_PEERS_COMPOSE_FILE up -d
-      # Optionally, add a sleep or health-check loop here to wait for services to be ready
-    - name: Wait for Network to Initialize
-      run: |
-        echo "Waiting for network to initialize..."
-        sleep 30  # Adjust time as necessary, or run custom health checks
-
-    - name: Run Fabric Integration Tests
-      run: |
-        echo "Running integration tests..."
-        # For example, you could run a script that validates channel creation,
-        # chaincode installation, or simply check container statuses:
-        docker ps
-        # Alternatively, run custom scripts:
-        # ./scripts/run-fabric-tests.sh
-
-    - name: Tear Down Network
-      run: |
-        echo "Tearing down the network..."
-          docker-compose -f $ORDERER_CA_YAML_FILE down
-          docker-compose -f $ORDERER_NODES_COMPOSE_FILE down
-
-          docker-compose -f $PESACHAIN_CA_YAML_FILE down
-          docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE down
-
-          docker-compose -f $ORG2_CA_YAML_FILE down
-          docker-compose -f $ORG2_PEERS_COMPOSE_FILE down
-
-      # - name: Build and Push Blockchain Docker Image
-      #   run: |
-      #     # Orderer Service
-      #     ORDERER_CA_YAML_FILE=./Blockchain/Hyperledger/Orderer/ca-orderer.yaml
-      #     ORDERER_NODES_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-orderer.yaml
-
-      #     docker-compose -f $ORDERER_CA_YAML_FILE build
-      #     docker-compose -f $ORDERER_CA_YAML_FILE push
-      #     docker-compose -f $ORDERER_NODES_COMPOSE_FILE build
-      #     docker-compose -f $ORDERER_NODES_COMPOSE_FILE push
-
-      #     # Pesachain Organization
-      #     PESACHAIN_CA_YAML_FILE=./Blockchain/Hyperledger/Pesachain/ca-pesachain.yaml
-      #     PESACHAIN_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
-
-      #     docker-compose -f $PESACHAIN_CA_YAML_FILE build
-      #     docker-compose -f $PESACHAIN_CA_YAML_FILE push
-      #     docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE build
-      #     docker-compose -f $PESACHAIN_PEERS_COMPOSE_FILE push
-
-      #     # Organization 2
-      #     ORG2_CA_YAML_FILE=./Blockchain/Hyperledger/org2/ca-org2.yaml
-      #     ORG2_PEERS_COMPOSE_FILE=./Blockchain/Hyperledger/docker-compose-peer.yaml
-
-      #     docker-compose -f $ORG2_CA_YAML_FILE build
-      #     docker-compose -f $ORG2_CA_YAML_FILE push
-      #     docker-compose -f $ORG2_PEERS_COMPOSE_FILE build
-      #     docker-compose -f $ORG2_PEERS_COMPOSE_FILE push
-
+      - name: Tear Down Network
+        if: always()
+        run: |
+          echo "Tearing down the network..."
+          docker-compose -f $COMPOSE_FILE_PATH down
 
   build-scan-push-web-image:
     runs-on: ubuntu-latest

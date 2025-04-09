@@ -4,21 +4,8 @@ networks:
 
 services:
   ##############################
-  # Vault & Vault Agents
+  # Vault Agents
   ##############################
-  vault-server:
-    image: hashicorp/vault:1.9.0
-    command: server -dev -dev-root-token-id=root.token
-    restart: unless-stopped
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: "root.token"
-    ports:
-      - "8200:8200"
-    volumes:
-      - Vault:/Vault
-    networks:
-      - fabricnet
-
   # Orderer Agents
   orderer1-agent:
     image: vault_orderer_agent:latest
@@ -32,9 +19,14 @@ services:
       - Security/Vault/vault-policies/Orderer/orderer1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_orderer1:/Vault/vault-secrets/orderer/
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - fabricnet
 
@@ -50,9 +42,14 @@ services:
       - Security/Vault/vault-policies/Orderer/orderer2-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_orderer2:/Vault/vault-secrets/orderer/
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - fabricnet
 
@@ -68,9 +65,14 @@ services:
       - Security/Vault/vault-policies/Orderer/orderer3-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_orderer3:/Vault/vault-secrets/orderer/
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - fabricnet
 
@@ -88,9 +90,9 @@ services:
       - Security/Vault/vault-policies/Org2/org2-admin-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_admin:/Vault/vault-secrets/admin
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -106,9 +108,9 @@ services:
       - Security/Vault/vault-policies/Org2/org2-certRenewalService-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_certRenewal:/Vault/vault-secrets/certRenewalService
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -125,9 +127,9 @@ services:
       - Security/Vault/vault-policies/Org2/org2-client1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_client1:/Vault/vault-secrets/client
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -146,9 +148,9 @@ services:
       - Security/Vault/vault-policies/Org2/org2-peer0-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_peer0:/Vault/vault-secrets/peer
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -167,9 +169,9 @@ services:
       - Security/Vault/vault-policies/Org2/org2-peer1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_peer1:/Vault/vault-secrets/peer
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -187,9 +189,9 @@ services:
       - Security/Vault/vault-policies/PesachainOrg/pesachain-admin-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_admin:/Vault/vault-secrets/admin
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -205,9 +207,9 @@ services:
       - Security/Vault/vault-policies/PesachainOrg/pesachain-certRenewalService-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_certRenewal:/Vault/vault-secrets/certRenewalService
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -224,9 +226,9 @@ services:
       - Security/Vault/vault-policies/PesachainOrg/pesachain-client1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_client1:/Vault/vault-secrets/client
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -245,9 +247,9 @@ services:
       - Security/Vault/vault-policies/PesachainOrg/pesachain-peer0-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_peer0:/Vault/vault-secrets/peer
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -266,9 +268,9 @@ services:
       - Security/Vault/vault-policies/PesachainOrg/pesachain-peer1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_peer1:/Vault/vault-secrets/peer
     environment:
-      VAULT_ADDR: "http://127.0.0.1:8200/"
-    depends_on:
-      - vault-server
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - fabricnet
 
@@ -318,7 +320,7 @@ services:
     image: hyperledger/fabric-peer:2.3.2
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_default
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_LOGGING_LEVEL=
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -329,13 +331,8 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/peer0/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/peer0/tls/server.crt
       - CORE_PEER_TLS_ROOTCERT_FILE=/peer0/tls/ca.crt
-      - FABRIC_LOGGING_SPEC=info
-      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=PesachainMSP
-
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet_test
-
       - CORE_PEER_ID=peer0.pesachain.com
       - CORE_PEER_ADDRESS=peer0.pesachain.com:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
@@ -361,7 +358,7 @@ services:
       - secrets_pesachain_admin:/admin
       - secrets_pesachain_client1:/client1
       - /var/run/:/host/var/run/
-      - ./:/etc/hyperledger/channel/
+      - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     networks:
       - fabricnet
@@ -373,7 +370,7 @@ services:
     image: hyperledger/fabric-peer:2.3.2
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_default
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_LOGGING_LEVEL=
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -384,13 +381,8 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/peer1/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/peer1/tls/server.crt
       - CORE_PEER_TLS_ROOTCERT_FILE=/peer1/tls/ca.crt
-      - FABRIC_LOGGING_SPEC=info
-      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=PesachainMSP
-
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet_test
-
       - CORE_PEER_ID=peer1.pesachain.com
       - CORE_PEER_ADDRESS=peer1.pesachain.com:8051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
@@ -414,7 +406,7 @@ services:
       - secrets_pesachain_admin:/admin
       - secrets_pesachain_client1:/client1
       - /var/run/:/host/var/run/
-      - ./:/etc/hyperledger/channel/
+      - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     networks:
       - fabricnet
@@ -472,7 +464,7 @@ services:
     image: hyperledger/fabric-peer:2.3.2
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_default
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_LOGGING_LEVEL=
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -483,13 +475,8 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/peer0/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/peer0/tls/server.crt
       - CORE_PEER_TLS_ROOTCERT_FILE=/peer0/tls/ca.crt
-      - FABRIC_LOGGING_SPEC=info
-      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=Org2MSP
-
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet_test
-
       - CORE_PEER_ID=peer0.org2.example.com
       - CORE_PEER_ADDRESS=peer0.org2.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
@@ -515,7 +502,7 @@ services:
       - secrets_org2_client1:/client1
       - secrets_org2_peer0:/peer0
       - /var/run/:/host/var/run/
-      - ./:/etc/hyperledger/channel/
+      - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
     networks:
       - fabricnet
     depends_on:
@@ -525,7 +512,7 @@ services:
     image: hyperledger/fabric-peer:2.3.2
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_default
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_LOGGING_LEVEL=
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -536,13 +523,8 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/peer1/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/peer1/tls/server.crt
       - CORE_PEER_TLS_ROOTCERT_FILE=/peer1/tls/ca.crt
-      - FABRIC_LOGGING_SPEC=info
-      - CORE_LOGGING_LEVEL=
       - ORDERER_GENERAL_LOGLEVEL=info
       - CORE_PEER_LOCALMSPID=Org2MSP
-
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet_test
-
       - CORE_PEER_ID=peer1.org2.example.com
       - CORE_PEER_ADDRESS=peer1.org2.example.com:10051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
@@ -568,14 +550,14 @@ services:
       - secrets_org2_client1:/client1
       - secrets_org2_peer1:/peer1
       - /var/run/:/host/var/run/
-      - ./:/etc/hyperledger/channel/
+      - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
     networks:
       - fabricnet
     depends_on:
       - couchdb3
 
-  orderer.com:
-    container_name: orderer.com
+  orderer.example.com:
+    container_name: orderer.example.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
@@ -604,13 +586,13 @@ services:
       - 7050:7050
       - 9444:9444
     networks:
-      - test
+      - fabricnet
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/genesis.block
       - secrets_orderer1:/orderer1
 
   orderer2.example.com:
-    container_name: orderer2.com
+    container_name: orderer2.example.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
@@ -639,13 +621,13 @@ services:
       - 8050:8050
       - 9445:9445
     networks:
-      - test
+      - fabricnet
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
       - secrets_orderer2:/orderer2
 
   orderer3.example.com:
-    container_name: orderer3.com
+    container_name: orderer3.example.com
     image: hyperledger/fabric-orderer:2.3.2
     dns_search: .
     environment:
@@ -674,7 +656,7 @@ services:
       - 9050:9050
       - 9446:9446
     networks:
-      - test
+      - fabricnet
     volumes:
       - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
       - secrets_orderer3:/orderer3
@@ -742,26 +724,6 @@ volumes:
       type: tmpfs
       device: tmpfs
   secrets_pesachain_peer1:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  secrets_fabric_pesachain_peer0:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  secrets_fabric_pesachain_peer1:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  secrets_fabric_org2_peer0:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  secrets_fabric_org2_peer1:
     driver: local
     driver_opts:
       type: tmpfs
