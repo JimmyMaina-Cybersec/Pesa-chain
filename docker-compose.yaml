@@ -1,3 +1,5 @@
+version: '2.4'
+
 networks:
   fabricnet:
     driver: bridge
@@ -99,7 +101,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -122,7 +124,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -148,7 +150,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -176,7 +178,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -204,7 +206,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -231,7 +233,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -254,7 +256,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -280,7 +282,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -308,7 +310,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -336,7 +338,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit; fi"]
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -433,7 +435,7 @@ services:
       - secrets_pesachain_peer0:/peer0
       - secrets_pesachain_admin:/admin
       - secrets_pesachain_client1:/client1
-      - /var/run/:/host/var/run/
+      - /var/run/docker.sock:/host/var/run/docker.sock
       - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     networks:
@@ -486,7 +488,7 @@ services:
       - secrets_pesachain_peer1:/peer1
       - secrets_pesachain_admin:/admin
       - secrets_pesachain_client1:/client1
-      - /var/run/:/host/var/run/
+      - /var/run/docker.sock:/host/var/run/docker.sock
       - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     networks:
@@ -588,7 +590,7 @@ services:
       - secrets_org2_admin:/admin
       - secrets_org2_client1:/client1
       - secrets_org2_peer0:/peer0
-      - /var/run/:/host/var/run/
+      - /var/run/docker.sock:/host/var/run/docker.sock
       - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
     networks:
       - fabricnet
@@ -640,7 +642,7 @@ services:
       - secrets_org2_admin:/admin
       - secrets_org2_client1:/client1
       - secrets_org2_peer1:/peer1
-      - /var/run/:/host/var/run/
+      - /var/run/docker.sock:/host/var/run/docker.sock
       - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
     networks:
       - fabricnet
@@ -658,7 +660,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_LOGGING_LEVEL=
-      - ORDERER_GENERAL_LISTENADDRESS=orderer.com
+      - ORDERER_GENERAL_LISTENADDRESS=orderer.example.com
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
@@ -672,7 +674,7 @@ services:
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer1/tls/server.key
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer1/tls/ca.crt
       - ORDERER_METRICS_PROVIDER=prometheus
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.com:9444
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.example.com:9444
       - ORDERER_GENERAL_LISTENPORT=7050
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
     command: orderer
@@ -696,7 +698,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=info
       - CORE_LOGGING_LEVEL=
-      - ORDERER_GENERAL_LISTENADDRESS=orderer2.com
+      - ORDERER_GENERAL_LISTENADDRESS=orderer2.example.com
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
@@ -710,7 +712,7 @@ services:
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer2/tls/server.key
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer2/tls/ca.crt
       - ORDERER_METRICS_PROVIDER=prometheus
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer2.com:9445
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer2.example.com:9445
       - ORDERER_GENERAL_LISTENPORT=8050
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
     command: orderer
@@ -734,7 +736,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=info
       - FABRIC_LOGGING_SPEC=info
       - CORE_LOGGING_LEVEL=
-      - ORDERER_GENERAL_LISTENADDRESS=orderer3.com
+      - ORDERER_GENERAL_LISTENADDRESS=orderer3.example.com
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
@@ -748,7 +750,7 @@ services:
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer3/tls/server.key
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer3/tls/ca.crt
       - ORDERER_METRICS_PROVIDER=prometheus
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer3.com:9446
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer3.example.com:9446
       - ORDERER_GENERAL_LISTENPORT=9050
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
     command: orderer
@@ -765,7 +767,6 @@ services:
       - secrets_orderer3:/orderer3
 
 volumes:
-  Vault:
   secrets_orderer1:
     driver: local
     driver_opts:
