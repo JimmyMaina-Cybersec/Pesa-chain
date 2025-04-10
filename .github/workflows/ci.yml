@@ -122,7 +122,7 @@ jobs:
       !contains(github.ref, 'refs/heads/bugfix/')
 
     env:
-      COMPOSE_FILE_PATH: ./Blockchain/docker-compose.yaml
+      COMPOSE_FILE_PATH: ../../docker-compose.yaml
 
     steps:
       - name: Checkout code
@@ -137,9 +137,9 @@ jobs:
           fi
           docker-compose --version
 
-      - name: Start Fabric Network (including Vault Agent)
+      - name: Start Fabric Network (including Vault Agents)
         run: |
-          echo "Starting Fabric network and Vault agent..."
+          echo "Starting the Pesachain Fabric network and Vault agents..."
           docker-compose -f $COMPOSE_FILE_PATH up -d
 
       - name: Wait for Network to Initialize
