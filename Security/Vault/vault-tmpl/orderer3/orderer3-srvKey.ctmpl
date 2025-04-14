@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/tls/server.key" -}}
+{{ .Data.data.content }}
+{{- end }}

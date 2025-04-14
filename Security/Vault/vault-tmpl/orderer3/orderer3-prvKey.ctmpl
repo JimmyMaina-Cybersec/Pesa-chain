@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/msp/keystore/8fce4dd27502743c673f9771fbcfa03158910db4291724d8748e37c70e7de257_sk" -}}
+{{ .Data.data.content }}
+{{- end }}

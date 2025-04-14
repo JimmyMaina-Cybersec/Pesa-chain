@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/ca/ca.pesachain.com-cert.pem" -}}
+{{ .Data.data.content }}
+{{- end }}

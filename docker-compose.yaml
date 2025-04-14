@@ -1,0 +1,834 @@
+version: '2.4'
+
+networks:
+  fabricnet:
+    driver: bridge
+
+services:
+  ###########################################################################################################################################################
+  # VAULT AGENTS
+  ###########################################################################################################################################################
+
+  ############################################################
+  # Orderer Agents
+  ############################################################
+  orderer1-agent:
+    image: vault_orderer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-orderer1.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/orderer1-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/orderer1-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/orderer/:/Vault/vault-tmpl/
+      - Security/Vault/vault-policies/Orderer/orderer1-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_orderer1:/Vault/vault-secrets/orderer/
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  orderer2-agent:
+    image: vault_orderer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-orderer2.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/orderer2-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/orderer2-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/orderer2/:/Vault/vault-tmpl/
+      - Security/Vault/vault-policies/Orderer/orderer2-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_orderer2:/Vault/vault-secrets/orderer/
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  orderer3-agent:
+    image: vault_orderer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-orderer3.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/orderer3-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/orderer3-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/orderer3/:/Vault/vault-tmpl/
+      - Security/Vault/vault-policies/Orderer/orderer3-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_orderer3:/Vault/vault-secrets/orderer/
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/orderer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/orderer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/orderer/tls/server.crt ] && [ -s /Vault/vault-secrets/orderer/tls/server.key ] && [ -s /Vault/vault-secrets/orderer/ca/ca-orderer-com-9054-ca-orderer-com.pem ]; then exit 0; else exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  ##################################################################
+  # Org2 Agents
+  ##################################################################
+  org2-admin-agent:
+    image: vault_admin_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-admin.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/org2-admin-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/org2-admin-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/org2/admin-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/admin-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-policies/Org2/org2-admin-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_org2_admin:/Vault/vault-secrets/admin
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  org2-certrenewal-agent:
+    image: vault_cert-renewal-service_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-certRenewalService.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/org2-certRenewalService-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/org2-certRenewalService-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/org2/:/Vault/vault-tmpl/
+      - Security/Vault/vault-policies/Org2/org2-certRenewalService-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_org2_certRenewal:/Vault/vault-secrets/certRenewalService
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  org2-client1-agent:
+    image: vault_client_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-client.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/org2-client1-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/org2-client1-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2-ca.ctmpl
+      - Security/Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2-tls.ctmpl
+      - Security/Vault/vault-tmpl/org2/client1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/client1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-policies/Org2/org2-client1-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_org2_client1:/Vault/vault-secrets/client
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  org2-peer0-agent:
+    image: vault_peer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-peer.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/org2-peer0-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/org2-peer0-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/ca.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer0-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer0-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer0-srvCert.ctmpl:/Vault/vault-tmpl/srvCert.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer0-srvKey.ctmpl:/Vault/vault-tmpl/srvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer0-caCert.ctmpl:/Vault/vault-tmpl/caCert.ctmpl
+      - Security/Vault/vault-policies/Org2/org2-peer0-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_org2_peer0:/Vault/vault-secrets/peer
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  org2-peer1-agent:
+    image: vault_peer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-peer.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/org2-peer1-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/org2-peer1-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/ca.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer1-srvCert.ctmpl:/Vault/vault-tmpl/srvCert.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer1-srvKey.ctmpl:/Vault/vault-tmpl/srvKey.ctmpl
+      - Security/Vault/vault-tmpl/org2/peer1-caCert.ctmpl:/Vault/vault-tmpl/caCert.ctmpl
+      - Security/Vault/vault-policies/Org2/org2-peer1-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_org2_peer1:/Vault/vault-secrets/peer
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  ########################################################################
+  # Pesachain Agents
+  ########################################################################
+  pesachain-admin-agent:
+    image: vault_admin_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-admin.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/pesachain-admin-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/pesachain-admin-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/pesachain/admin-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/admin-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-policies/PesachainOrg/pesachain-admin-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_pesachain_admin:/Vault/vault-secrets/admin
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/admin/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/admin/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/admin/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/admin/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  pesachain-certrenewal-agent:
+    image: vault_cert-renewal-service_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-certRenewalService.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/pesachain-certRenewalService-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/pesachain-certRenewalService-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/pesachain/:/Vault/vault-tmpl/
+      - Security/Vault/vault-policies/PesachainOrg/pesachain-certRenewalService-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_pesachain_certRenewal:/Vault/vault-secrets/certRenewalService
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/certRenewalService/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/certRenewalService/tlsca/tlsca-cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  pesachain-client1-agent:
+    image: vault_client_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-client.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/pesachain-client1-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/pesachain-client1-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain-ca.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain-tls.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/client1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/client1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-policies/PesachainOrg/pesachain-client1-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_pesachain_client1:/Vault/vault-secrets/client
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/client/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/client/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/client/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/client/msp/signcerts/cert.pem ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  pesachain-peer0-agent:
+    image: vault_peer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-peer.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/pesachain-peer0-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/pesachain-peer0-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/ca.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer0-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer0-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer0-srvCert.ctmpl:/Vault/vault-tmpl/srvCert.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer0-srvKey.ctmpl:/Vault/vault-tmpl/srvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer0-caCert.ctmpl:/Vault/vault-tmpl/caCert.ctmpl
+      - Security/Vault/vault-policies/PesachainOrg/pesachain-peer0-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_pesachain_peer0:/Vault/vault-secrets/peer
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  pesachain-peer1-agent:
+    image: vault_peer_agent:latest
+    command: agent -config=/Vault/vault-config/agent.hcl
+    restart: unless-stopped
+    volumes:
+      - Security/Vault/vault-config/vault-agent-peer.hcl:/Vault/vault-config/agent.hcl
+      - Security/Vault/vault-creds/pesachain-peer1-role_roleid.txt:/Vault/vault-creds/roleid.txt
+      - Security/Vault/vault-creds/pesachain-peer1-role_secretid.txt:/Vault/vault-creds/secretid.txt
+      - Security/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/ca.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer1-srvCert.ctmpl:/Vault/vault-tmpl/srvCert.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer1-srvKey.ctmpl:/Vault/vault-tmpl/srvKey.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/peer1-caCert.ctmpl:/Vault/vault-tmpl/caCert.ctmpl
+      - Security/Vault/vault-policies/PesachainOrg/pesachain-peer1-policy.hcl:/Vault/vault-policies/policy.hcl
+      - secrets_pesachain_peer1:/Vault/vault-secrets/peer
+    environment:
+      VAULT_ADDR: "http://host.docker.internal:8200/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "if [ -s /Vault/vault-secrets/peer/ca/ca-cert.pem ] && [ -s /Vault/vault-secrets/peer/tlsca/tlsca-cert.pem ] && [ -s /Vault/vault-secrets/peer/msp/keystore/prvKey.pem ] && [ -s /Vault/vault-secrets/peer/msp/signcerts/cert.pem ] && [ -s /Vault/vault-secrets/peer/tls/server.crt ] && [ -s /Vault/vault-secrets/peer/tls/server.key ] && [ -s /Vault/vault-secrets/peer/tls/ca.crt ]; then exit 0; else exit 1 ; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fabricnet
+
+  ###########################################################################################################################################################
+  # FABRIC NETWORK
+  ###########################################################################################################################################################
+
+  ###########################################################################
+  # Pesachain Org.
+  ###########################################################################
+  ca_pesachain:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.pesachain.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - secrets_pesachain_certRenewal:/pesachain
+    container_name: ca.pesachain.com
+    hostname: ca.pesachain.com
+    networks:
+      - fabricnet
+    depends_on:
+      pesachain-certrenewal-agent:
+        condition: service_healthy
+
+  couchdb0:
+    container_name: couchdb0
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - "5984:5984"
+    networks:
+      - fabricnet
+
+  couchdb1:
+    container_name: couchdb1
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - "6984:5984"
+    networks:
+      - fabricnet
+
+  peer0.pesachain.com:
+    image: hyperledger/fabric-peer:2.3.2
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+      - CORE_PEER_MSPCONFIGPATH=/peer0/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_KEY_FILE=/peer0/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/peer0/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/peer0/tls/ca.crt
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - CORE_PEER_LOCALMSPID=PesachainMSP
+      - CORE_PEER_ID=peer0.pesachain.com
+      - CORE_PEER_ADDRESS=peer0.pesachain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.pesachain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      # Peer used to bootstrap gossip within organisation
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.pesachain.com:8051
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.pesachain.com:7051
+
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+    ports:
+      - "7051:7051"
+      - "9440:9440"
+    volumes:
+      - secrets_pesachain_peer0:/peer0
+      - secrets_pesachain_admin:/admin
+      - secrets_pesachain_client1:/client1
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    networks:
+      - fabricnet
+    command: peer node start
+    depends_on:
+      pesachain-peer0-agent:
+        condition: service_healthy
+      couchdb0:
+        condition: service_started
+
+
+
+  peer1.pesachain.com:
+    image: hyperledger/fabric-peer:2.3.2
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+      - CORE_PEER_MSPCONFIGPATH=/peer1/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_KEY_FILE=/peer1/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/peer1/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/peer1/tls/ca.crt
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - CORE_PEER_LOCALMSPID=PesachainMSP
+      - CORE_PEER_ID=peer1.pesachain.com
+      - CORE_PEER_ADDRESS=peer1.pesachain.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.pesachain.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.pesachain.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.pesachain.com:7051
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9441
+    ports:
+      - "8051:8051"
+      - "9441:9441"
+    volumes:
+      - secrets_pesachain_peer1:/peer1
+      - secrets_pesachain_admin:/admin
+      - secrets_pesachain_client1:/client1
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./Blockchain/Hyperledger-Fabric/Pesachain:/etc/hyperledger/channel/
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    networks:
+      - fabricnet
+    command: peer node start
+    depends_on:
+      pesachain-peer1-agent:
+        condition: service_healthy
+      couchdb1:
+        condition: service_started
+
+  ###############################################################################
+  # Org2
+  ###############################################################################
+  ca_org2:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.org2.example.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=8054
+    ports:
+      - "8054:8054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - Blockchain/Hyperledger-Fabric/org2/fabric-ca/org2/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+      - Blockchain/Hyperledger-Fabric/org2/fabric-ca/org2/fabric-ca-server.db:/etc/hyperledger/fabric-ca-server/fabric-ca-server.db
+      - Blockchain/Hyperledger-Fabric/org2/fabric-ca/org2/IssuerPublicKey:/etc/hyperledger/fabric-ca-server/IssuerPublicKey
+      - Blockchain/Hyperledger-Fabric/org2/fabric-ca/org2/IssuerRevocationPublicKey:/etc/hyperledger/fabric-ca-server/IssuerRevocationPublicKey
+      - secrets_org2_certRenewal:/org2
+    container_name: ca.org2.example.com
+    hostname: ca.org2.example.com
+    networks:
+      - fabricnet
+    depends_on:
+      org2-certrenewal-agent:
+        condition: service_healthy
+
+  couchdb2:
+    container_name: couchdb2
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - "3984:5984"
+    networks:
+      - fabricnet
+
+  couchdb3:
+    container_name: couchdb3
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - "4984:5984"
+    networks:
+      - fabricnet
+
+  peer0.org2.example.com:
+    image: hyperledger/fabric-peer:2.3.2
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+      - CORE_PEER_MSPCONFIGPATH=/peer0/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_KEY_FILE=/peer0/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/peer0/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/peer0/tls/ca.crt
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ID=peer0.org2.example.com
+      - CORE_PEER_ADDRESS=peer0.org2.example.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org2.example.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.example.com:10051
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9442
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "9051:9051"
+      - "9442:9442"
+    volumes:
+      - secrets_org2_admin:/admin
+      - secrets_org2_client1:/client1
+      - secrets_org2_peer0:/peer0
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
+    networks:
+      - fabricnet
+    depends_on:
+      org2-peer0-agent:
+        condition: service_healthy
+      couchdb2:
+        condition: service_started
+
+
+  peer1.org2.example.com:
+    image: hyperledger/fabric-peer:2.3.2
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabricnet
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+      - CORE_PEER_MSPCONFIGPATH=/peer1/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_KEY_FILE=/peer1/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/peer1/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/peer1/tls/ca.crt
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ID=peer1.org2.example.com
+      - CORE_PEER_ADDRESS=peer1.org2.example.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org2.example.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:10051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:9051
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb3:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "10051:10051"
+      - "9443:9443"
+    volumes:
+      - secrets_org2_admin:/admin
+      - secrets_org2_client1:/client1
+      - secrets_org2_peer1:/peer1
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./Blockchain/Hyperledger-Fabric/org2:/etc/hyperledger/channel/
+    networks:
+      - fabricnet
+    depends_on:
+      org2-peer0-agent:
+        condition: service_healthy
+      couchdb3:
+        condition: service_started
+
+  orderer.example.com:
+    container_name: orderer.example.com
+    image: hyperledger/fabric-orderer:2.3.2
+    dns_search: .
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_LOGGING_LEVEL=
+      - ORDERER_GENERAL_LISTENADDRESS=orderer.example.com
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/orderer1/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/orderer1/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/orderer1/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/orderer1/tls/ca.crt
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/orderer1/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer1/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer1/tls/ca.crt
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.example.com:9444
+      - ORDERER_GENERAL_LISTENPORT=7050
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
+    command: orderer
+    ports:
+      - 7050:7050
+      - 9444:9444
+    networks:
+      - fabricnet
+    depends_on:
+      orderer1-agent:
+        condition: service_healthy
+    volumes:
+      - ./genesis.block:/var/hyperledger/orderer/genesis.block
+      - secrets_orderer1:/orderer1
+
+  orderer2.example.com:
+    container_name: orderer2.example.com
+    image: hyperledger/fabric-orderer:2.3.2
+    dns_search: .
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
+      - ORDERER_GENERAL_LISTENADDRESS=orderer2.example.com
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/orderer2/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/orderer2/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/orderer2/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/orderer2/tls/ca.crt
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/orderer2/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer2/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer2/tls/ca.crt
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer2.example.com:9445
+      - ORDERER_GENERAL_LISTENPORT=8050
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
+    command: orderer
+    ports:
+      - 8050:8050
+      - 9445:9445
+    networks:
+      - fabricnet
+    depends_on:
+      orderer2-agent:
+        condition: service_healthy
+    volumes:
+      - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - secrets_orderer2:/orderer2
+
+  orderer3.example.com:
+    container_name: orderer3.example.com
+    image: hyperledger/fabric-orderer:2.3.2
+    dns_search: .
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_LOGGING_LEVEL=
+      - ORDERER_GENERAL_LISTENADDRESS=orderer3.example.com
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/orderer3/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/orderer3/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/orderer3/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/orderer3/tls/ca.crt
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/orderer3/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/orderer3/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/orderer3/tls/ca.crt
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer3.example.com:9446
+      - ORDERER_GENERAL_LISTENPORT=9050
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
+    command: orderer
+    ports:
+      - 9050:9050
+      - 9446:9446
+    networks:
+      - fabricnet
+    depends_on:
+      orderer3-agent:
+        condition: service_healthy
+    volumes:
+      - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - secrets_orderer3:/orderer3
+
+volumes:
+  secrets_orderer1:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_orderer2:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_orderer3:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_org2_admin:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_org2_certRenewal:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_org2_client1:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_org2_peer0:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_org2_peer1:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_pesachain_admin:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_pesachain_certRenewal:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_pesachain_client1:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_pesachain_peer0:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  secrets_pesachain_peer1:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

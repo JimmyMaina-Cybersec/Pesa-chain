@@ -1,0 +1,3 @@
+{{- with secret "secret/crypto/orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/msp/cacerts/ca-orderer-com-9054-ca-orderer-com.pem" -}}
+{{ .Data.data.content }}
+{{- end }}
