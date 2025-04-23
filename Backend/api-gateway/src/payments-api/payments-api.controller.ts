@@ -21,19 +21,30 @@ export class PaymentsApiController {
     @Body() createPaymentsApiDto: CreatePaymentsApiDto,
     @Req() req: CustomRequest,
   ) {
-    const orgIdentityKey: string = (
-      req.user as { organizationIdentityKey: string }
-    ).organizationIdentityKey;
+    // Extract organization identity key and mspId from the request user payload.
+    const user = req.user as {
+      organizationIdentityKey?: string;
+      mspId?: string;
+    };
+    const orgIdentityKey = user.organizationIdentityKey;
+    const mspId = user.mspId;
+
     if (!orgIdentityKey) {
       throw new HttpException(
         'Organization identity key not found',
         HttpStatus.BAD_REQUEST,
       );
     }
-    // Pass both the DTO and the dynamic identity key to the service.
+
+    if (!mspId) {
+      throw new HttpException('MSP ID not found', HttpStatus.BAD_REQUEST);
+    }
+
+    // Pass DTO, orgIdentityKey, and mspId explicitly to the service.
     return await this.paymentsApiService.create(
       createPaymentsApiDto,
       orgIdentityKey,
+      mspId,
     );
   }
 

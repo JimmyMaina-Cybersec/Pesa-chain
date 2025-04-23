@@ -766,6 +766,60 @@ services:
       - ./genesis.block:/var/hyperledger/orderer/orderer.genesis.block
       - secrets_orderer3:/orderer3
 
+  ###########################################################################################################################################################
+  # BACKEND SERVICE
+  ###########################################################################################################################################################
+
+  ###########################################################################
+  # Payments API
+  ###########################################################################
+  payment-api:
+    container_name: payments-api
+    build:
+      context: ../..
+      dockerfile: src/payments-api/Dockerfile
+    image: payments-api:latest
+    restart: unless-stopped
+    networks:
+      - fabricnet
+
+    ports:
+      - "3001:3000"
+
+    environment:
+      - VAULT_ADDR=http://host.docker.internal:8200/
+      - NODE_ENV=${NODE_ENV:-development}  # Default to development if not set
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Dev-only mount (do NOT use in production)
+    volumes:
+      - ./src/payments-api:/app/src/payments-api:ro
+      - ./src/connection.json:/app/src/connection.json:ro
+
+      # Vault secrets (shared across all environments)
+      - secrets_org2_client1:/Vault/vault-secrets/org2-client1:ro
+      - secrets_pesachain_client1:/Vault/vault-secrets/pesachain-client1:ro
+
+    depends_on:
+      org2-client1-agent:
+        condition: service_healthy
+      pesachain-client1-agent:
+        condition: service_healthy
+      peer0.org2.example.com:
+      peer1.org2.example.com:
+      peer0.pesachain.com:
+      peer1.pesachain.com:
+      orderer.example.com:
+      orderer2.example.com:
+      orderer3.example.com:
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   secrets_orderer1:
     driver: local
