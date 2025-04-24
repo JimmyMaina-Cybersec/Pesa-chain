@@ -112,7 +112,7 @@ func (cc *PaymentsControllerCC) dispatchPayment(stub shim.ChaincodeStubInterface
 		return cc.errorResponse("UNAUTHORIZED_MSP", fmt.Sprintf("MSP %s is not authorized", mspID))
 	}
 
-	// Optional: Check role == "client"
+	// Optional: Check hf.Type attribute == "client"
 	userType, found, _ := identity.GetAttributeValue(stub, "hf.Type")
 	if !found || userType != "client" {
 		return cc.errorResponse("INVALID_TYPE", "Only client identities can dispatch payments")

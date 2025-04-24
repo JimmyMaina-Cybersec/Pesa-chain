@@ -1,121 +1,38 @@
 {
-  "name": "Fabric",
-  "version": "2.1",
-  "mutual-tls": false,
-  "info": {
-    "Version": "2.2.4",
-    "Size": "2 Orgs with 2 Peer",
-    "Orderer": "Raft",
-    "Distribution": "Single Host",
-    "StateDB": "CouchDB"
-  },
-  "clients": {
-    "user1@pesachain.com": {
-      "client": {
-        "organization": "Pesachain",
-        "credentialStore": {
-          "path": "/tmp/hfc-kvs/pesachain",
-          "cryptoStore": {
-            "path": "/tmp/hfc-cvs/pesachain"
-          }
-        },
-        "clientPrivateKey": {
-          "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/keystore/c9a2b2c9e0a687cda68e4995f390e79a5bcf9ef83ffc31d4ec6945e21a97d37b_sk"
-        },
-        "clientSignedCert": {
-          "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/User1@pesachain.com/msp/signcerts/cert.pem"
-        }
+  "name": "FabricNetwork",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Pesachain",
+    "connection": {
+      "timeout": {
+        "peer": { "endorser": "300" }
       }
     }
   },
-  "channels": {
-    "payment-channel": {
-      "created": true,
-      "orderers": [
-        "orderer.com",
-        "orderer2.com",
-        "orderer3.com"
-      ],
-      "peers": {
-        "peer0.pesachain.com": {
-          "eventSource": true
-        },
-        "peer0.org2.example.com": {
-          "eventSource": true
-        }
-      },
-      "contracts": [
-        {
-          "id": "paymentsControllerCC",
-          "version": "1.0.3",
-          "language": "golang"
-        }
-      ]
-    }
-  },
+
   "organizations": {
     "Pesachain": {
-      "mspid": "PesachainMSP",
+      "mspId": "PesachainMSP",
       "peers": [
         "peer0.pesachain.com",
         "peer1.pesachain.com"
       ],
       "certificateAuthorities": [
         "ca.pesachain.com"
-      ],
-      "adminPrivateKey": {
-        "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/Admin@pesachain.com/msp/keystore/4bf8b0d0e10ff0ef7d614d06d9f343c682d2c8ec0013f799df8ee0fa9bcb2aa6_sk"
-      },
-      "signedCert": {
-        "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/users/Admin@pesachain.com/msp/signcerts/cert.pem"
-      }
+      ]
     },
     "Org2": {
-      "mspid": "Org2MSP",
+      "mspId": "Org2MSP",
       "peers": [
         "peer0.org2.example.com",
         "peer1.org2.example.com"
       ],
       "certificateAuthorities": [
         "ca.org2.example.com"
-      ],
-      "adminPrivateKey": {
-        "path": "../org2/crypto-config-ca/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/2c39eaed12329fc411f655347a3fbb4c02d3ccaf7cb25aa612fad91d320119e7_sk"
-      },
-      "signedCert": {
-        "path": "../org2/crypto-config-ca/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/cert.pem"
-      }
+      ]
     }
   },
-  "orderers": {
-    "orderer.com": {
-      "url": "grpcs://orderer.com:7050",
-      "grpcOptions": {
-        "ssl-target-name-override": "orderer.com"
-      },
-      "tlsCACerts": {
-        "path": "../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer.com/msp/tlscacerts/tlsca.orderer.com-cert.pem"
-      }
-    },
-    "orderer2.com": {
-      "url": "grpcs://orderer2.com:8050",
-      "grpcOptions": {
-        "ssl-target-name-override": "orderer2.com"
-      },
-      "tlsCACerts": {
-        "path": "../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer2.com/msp/tlscacerts/tlsca.orderer.com-cert.pem"
-      }
-    },
-    "orderer3.com": {
-      "url": "grpcs://orderer3.com:9050",
-      "grpcOptions": {
-        "ssl-target-name-override": "orderer3.com"
-      },
-      "tlsCACerts": {
-        "path": "../orderer/crypto-config-ca/ordererOrganizations/orderer.com/orderers/orderer3.com/msp/tlscacerts/tlsca.orderer.com-cert.pem"
-      }
-    }
-  },
+
   "peers": {
     "peer0.pesachain.com": {
       "url": "grpcs://peer0.pesachain.com:7051",
@@ -124,7 +41,7 @@
         "grpc.keepalive_time_ms": 600000
       },
       "tlsCACerts": {
-        "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/peers/peer0.pesachain.com/tls/tlscacerts/tls-ca-pesachain-com-7054-ca-pesachain-com.pem"
+        "path": "/Vault/vault-secrets/client/tlsca/pesachainTlsca.pem"
       }
     },
     "peer1.pesachain.com": {
@@ -134,7 +51,7 @@
         "grpc.keepalive_time_ms": 600000
       },
       "tlsCACerts": {
-        "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/peers/peer1.pesachain.com/tls/tlscacerts/tls-ca-pesachain-com-7054-ca-pesachain-com.pem"
+        "path": "/Vault/vault-secrets/client/tlsca/pesachainTlsca.pem"
       }
     },
     "peer0.org2.example.com": {
@@ -144,7 +61,7 @@
         "grpc.keepalive_time_ms": 600000
       },
       "tlsCACerts": {
-        "path": "../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/tlscacerts/tls-ca-org2-example-com-8054-ca-org2-example-com.pem"
+        "path": "/Vault/vault-secrets/client/tlsca/org2Tlsca.pem"
       }
     },
     "peer1.org2.example.com": {
@@ -154,40 +71,90 @@
         "grpc.keepalive_time_ms": 600000
       },
       "tlsCACerts": {
-        "path": "../org2/crypto-config-ca/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/tlscacerts/tls-ca-org2-example-com-8054-ca-org2-example-com.pem"
+        "path": "/Vault/vault-secrets/client/tlsca/org2Tlsca.pem"
       }
     }
   },
+
+  "orderers": {
+    "orderer.com": {
+      "url": "grpcs://orderer.com:7050",
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer.com"
+      },
+      "tlsCACerts": {
+        "path": "/Vault/vault-secrets/client/tls/ca1.crt"
+      }
+    },
+    "orderer2.com": {
+      "url": "grpcs://orderer2.com:8050",
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer2.com"
+      },
+      "tlsCACerts": {
+        "path": "/Vault/vault-secrets/client/tls/ca2.crt"
+      }
+    },
+    "orderer3.com": {
+      "url": "grpcs://orderer3.com:9050",
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer3.com"
+      },
+      "tlsCACerts": {
+        "path": "/Vault/vault-secrets/client/tls/ca3.crt"
+      }
+    }
+  },
+
   "certificateAuthorities": {
     "ca.pesachain.com": {
       "url": "https://ca.pesachain.com:7054",
-      "httpOptions": {
-        "verify": false
-      },
+      "httpOptions": { "verify": false },
       "tlsCACerts": {
-        "path": "../Pesachain/crypto-config-ca/peerOrganizations/pesachain.com/tlsca/tlsca.pesachain.com-cert.pem"
-      },
-      "registrar": [
-        {
-          "enrollId": "admin",
-          "enrollSecret": "adminpw"
-        }
-      ]
+        "path": "/Vault/vault-secrets/client/tlsca/pesachainTlsca.pem"
+      }
     },
     "ca.org2.example.com": {
       "url": "https://ca.org2.example.com:8054",
-      "httpOptions": {
-        "verify": false
-      },
+      "httpOptions": { "verify": false },
       "tlsCACerts": {
-        "path": "../org2/crypto-config-ca/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem"
+        "path": "/Vault/vault-secrets/client/tlsca/org2Tlsca.pem"
+      }
+    }
+  },
+
+  "channels": {
+    "payment-channel": {
+      "orderers": [
+        "orderer.com",
+        "orderer2.com",
+        "orderer3.com"
+      ],
+      "peers": {
+        "peer0.pesachain.com": {},
+        "peer1.pesachain.com": {},
+        "peer0.org2.example.com": {},
+        "peer1.org2.example.com": {}
+      }
+    },
+    "paymentsOrchestrator-channel": {
+      "orderers": [
+        "orderer.com",
+        "orderer2.com",
+        "orderer3.com"
+      ],
+      "peers": {
+        "peer0.pesachain.com": {},
+        "peer1.pesachain.com": {},
+        "peer0.org2.example.com": {},
+        "peer1.org2.example.com": {}
       },
-      "registrar": [
-        {
-          "enrollId": "admin",
-          "enrollSecret": "adminpw"
+      "contracts": {
+        "paymentsControllerCC": {
+          "version": "1.0.3",
+          "language": "golang"
         }
-      ]
+      }
     }
   }
 }

@@ -139,10 +139,13 @@ services:
       - Security/Vault/vault-config/vault-agent-client.hcl:/Vault/vault-config/agent.hcl
       - Security/Vault/vault-creds/org2-client1-role_roleid.txt:/Vault/vault-creds/roleid.txt
       - Security/Vault/vault-creds/org2-client1-role_secretid.txt:/Vault/vault-creds/secretid.txt
-      - Security/Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2-ca.ctmpl
-      - Security/Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2-tls.ctmpl
+      - Security/Vault/vault-tmpl/org2/org2-ca.ctmpl:/Vault/vault-tmpl/org2/ca.ctmpl
+      - Security/Vault/vault-tmpl/org2/org2-tls.ctmpl:/Vault/vault-tmpl/org2/tlsca.ctmpl
       - Security/Vault/vault-tmpl/org2/client1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
       - Security/Vault/vault-tmpl/org2/client1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/orderer/orderer1-tlsca.ctmpl:/Vault/vault-tmpl/tlsca1.ctmpl
+      - Security/Vault/vault-tmpl/orderer2/orderer2-tlsca.ctmpl:/Vault/vault-tmpl/tlsca2.ctmpl
+      - Security/Vault/vault-tmpl/orderer3/orderer3-tlsca.ctmpl:/Vault/vault-tmpl/tlsca3.ctmpl
       - Security/Vault/vault-policies/Org2/org2-client1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_org2_client1:/Vault/vault-secrets/client
     environment:
@@ -271,10 +274,13 @@ services:
       - Security/Vault/vault-config/vault-agent-client.hcl:/Vault/vault-config/agent.hcl
       - Security/Vault/vault-creds/pesachain-client1-role_roleid.txt:/Vault/vault-creds/roleid.txt
       - Security/Vault/vault-creds/pesachain-client1-role_secretid.txt:/Vault/vault-creds/secretid.txt
-      - Security/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain-ca.ctmpl
-      - Security/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain-tls.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/pesachain-ca.ctmpl:/Vault/vault-tmpl/pesachain/ca.ctmpl
+      - Security/Vault/vault-tmpl/pesachain/pesachain-tls.ctmpl:/Vault/vault-tmpl/pesachain/tlsca.ctmpl
       - Security/Vault/vault-tmpl/pesachain/client1-prvKey.ctmpl:/Vault/vault-tmpl/prvKey.ctmpl
       - Security/Vault/vault-tmpl/pesachain/client1-signcert.ctmpl:/Vault/vault-tmpl/signcert.ctmpl
+      - Security/Vault/vault-tmpl/orderer/orderer1-tlsca.ctmpl:/Vault/vault-tmpl/tlsca1.ctmpl
+      - Security/Vault/vault-tmpl/orderer2/orderer2-tlsca.ctmpl:/Vault/vault-tmpl/tlsca2.ctmpl
+      - Security/Vault/vault-tmpl/orderer3/orderer3-tlsca.ctmpl:/Vault/vault-tmpl/tlsca3.ctmpl
       - Security/Vault/vault-policies/PesachainOrg/pesachain-client1-policy.hcl:/Vault/vault-policies/policy.hcl
       - secrets_pesachain_client1:/Vault/vault-secrets/client
     environment:
@@ -797,7 +803,7 @@ services:
       - ./src/payments-api:/app/src/payments-api:ro
       - ./src/connection.json:/app/src/connection.json:ro
 
-      # Vault secrets (shared across all environments)
+      # client identities
       - secrets_org2_client1:/Vault/vault-secrets/org2-client1:ro
       - secrets_pesachain_client1:/Vault/vault-secrets/pesachain-client1:ro
 
