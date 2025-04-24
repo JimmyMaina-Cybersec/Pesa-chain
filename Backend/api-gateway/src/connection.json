@@ -46,7 +46,7 @@
       },
       "contracts": [
         {
-          "id": "paymentccgo",
+          "id": "paymentsControllerCC",
           "version": "1.0.3",
           "language": "golang"
         }
